@@ -1,28 +1,28 @@
 
-export interface AppItem {
+export interface MovieItem {
   id: string;
-  name: string;
-  category: 'Game' | 'App' | 'Utility' | 'Social';
+  title: string;
+  category: 'Ação' | 'Terror' | 'Comédia' | 'Ficção' | 'Drama' | 'Série';
   rating: number;
-  downloads: string;
-  version: string;
-  size: string;
-  icon: string;
+  year: string;
+  duration: string;
+  poster: string;
+  backdrop: string;
   description: string;
-  modFeatures: string[];
+  actors: string[]; // Alterado de cast para actors
   isPremium: boolean;
   isVerified: boolean;
-  author: string;
+  director: string;
+  videoUrl: string;
   downloadUrl: string;
 }
 
-export type Category = 'All' | 'Game' | 'App' | 'Utility' | 'Social';
+export type Category = 'All' | 'Ação' | 'Terror' | 'Comédia' | 'Ficção' | 'Drama' | 'Série';
 export type Language = 'pt' | 'en' | 'es' | 'ru' | 'fr' | 'it' | 'ko' | 'ja';
 export type ThemeColor = 'blue' | 'emerald' | 'rose' | 'amber' | 'purple' | 'cyan' | 'red' | 'orange' | 'lime' | 'fuchsia';
-export type SortOption = 'default' | 'rating' | 'name' | 'size';
+export type SortOption = 'default' | 'rating' | 'name' | 'year';
 
 export interface TranslationSchema {
-  // Hero & Navbar
   heroTitle: string;
   heroDesc: string;
   searchPlaceholder: string;
@@ -31,50 +31,41 @@ export interface TranslationSchema {
   latency: string;
   uptime: string;
   tickerMsgs: string[];
-  
-  // Categorias
   categoryAll: string;
-  categoryGame: string;
-  categoryApp: string;
-  categoryUtility: string;
-  categorySocial: string;
-  
-  // UI Geral
+  categoryAction: string;
+  categoryHorror: string;
+  categoryComedy: string;
+  categorySciFi: string;
+  categoryDrama: string;
+  categorySeries: string;
   noResults: string;
   sortBy: string;
   sortName: string;
   sortRating: string;
-  sortSize: string;
+  sortYear: string;
   recent: string;
   favorites: string;
   tryAgain: string;
-  
-  // Seções
   verifiedOfficial: string;
   qualityCertified: string;
   systemLibrary: string;
   exploringDatabase: string;
   waitingProjects: string;
   supabaseError: string;
-  
-  // Detalhes do App
-  aboutMod: string;
+  aboutMovie: string;
   downloadBtn: string;
+  watchBtn: string;
   generatingLink: string;
   redirecting: string;
-  modEdition: string;
-  officialDev: string;
-  version: string;
-  size: string;
-  rating: string;
+  movieEdition: string;
+  directorLabel: string;
+  yearLabel: string;
+  durationLabel: string;
+  ratingLabel: string;
   optimizedText: string;
   verifiedBy: string;
-  
-  // Protocolo de Segurança
   secureProtocol: string;
   scanSteps: string[];
-  
-  // Perfil Dev
   reverseEngineering: string;
   devSpecialist: string;
   age: string;
@@ -84,8 +75,6 @@ export interface TranslationSchema {
   connect: string;
   message: string;
   telegram: string;
-  
-  // IA
   aiChatTitle: string;
   aiChatPlaceholder: string;
   aiWelcome: string;
@@ -95,8 +84,6 @@ export interface TranslationSchema {
   aiAnalysis: string;
   experimentalTip: string;
   mainFeatures: string;
-
-  // Settings
   amoledOptimization: string;
   auroraOn: string;
   amoledOn: string;
