@@ -1,8 +1,10 @@
+
 import { defineConfig } from 'vite';
 
 export default defineConfig({
   define: {
-    'process.env.API_KEY': JSON.stringify(process.env.API_KEY)
+    // Garante que a API_KEY da Vercel esteja disponível no navegador
+    'process.env.API_KEY': JSON.stringify(process.env.API_KEY || '')
   },
   build: {
     target: 'esnext',
