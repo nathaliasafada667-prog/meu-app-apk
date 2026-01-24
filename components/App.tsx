@@ -1,245 +1,250 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { AppItem, Category, Language, ThemeColor, SortOption } from '../types';
+import { MovieItem, Category, Language, ThemeColor, SortOption } from '../types';
 import { translations } from '../translations';
 import { supabase } from '../lib/supabase';
 import Navbar from './Navbar';
 import AppCard from './AppCard';
 import AppDetails from './AppDetails';
 import DevProfile from './DevProfile';
+import CineHub from './CineHub';
 import AIAssistant from './AIAssistant';
 
 const App: React.FC = () => {
-  const [apps, setApps] = useState<AppItem[]>([]);
+  const [apps, setApps] = useState<MovieItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isBooting, setIsBooting] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<Category>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedApp, setSelectedApp] = useState<AppItem | null>(null);
+  const [selectedApp, setSelectedApp] = useState<MovieItem | null>(null);
   const [showDevProfile, setShowDevProfile] = useState(false);
   const [sortOption, setSortOption] = useState<SortOption>('default');
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
-  const [isEnergySaving, setIsEnergySaving] = useState(() => {
-    const saved = localStorage.getItem('esmael_energy');
-    return saved === 'true';
-  });
   
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    const saved = localStorage.getItem('esmael_favs');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [lang, setLang] = useState<Language>(() => {
-    const savedLang = localStorage.getItem('esmael_lang');
-    return (savedLang as Language) || 'pt';
-  });
-  
-  const [theme, setTheme] = useState<ThemeColor>(() => {
-    const savedTheme = localStorage.getItem('esmael_theme');
-    return (savedTheme as ThemeColor) || 'blue';
-  });
+  const [isEnergySaving, setIsEnergySaving] = useState(() => localStorage.getItem('esmael_energy') === 'true');
+  const [favorites, setFavorites] = useState<string[]>(() => JSON.parse(localStorage.getItem('esmael_cine_favs') || '[]'));
+  const [lang, setLang] = useState<Language>(() => (localStorage.getItem('esmael_lang') as Language) || 'pt');
+  const [theme, setTheme] = useState<ThemeColor>(() => (localStorage.getItem('esmael_theme') as ThemeColor) || 'rose');
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isEnergySaving) return;
-    const x = (e.clientX / window.innerWidth) * 100;
-    const y = (e.clientY / window.innerHeight) * 100;
-    setMousePos({ x, y });
+    setMousePos({ x: (e.clientX / window.innerWidth) * 100, y: (e.clientY / window.innerHeight) * 100 });
   };
 
-  const fetchApps = async () => {
+  const fetchMovies = async () => {
     setLoading(true);
-    setErrorMsg(null);
     try {
-      const { data, error } = await supabase
-        .from('apps')
-        .select('*')
-        .order('is_verified', { ascending: false })
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const { data, error } = await supabase.from('movies').select('*').order('created_at', { ascending: false });
       
-      if (data) {
-        const formattedData: AppItem[] = data.map(item => ({
-          id: item.id?.toString(),
-          name: item.name,
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setApps(data.map(item => ({
+          id: item.id.toString(),
+          title: item.title,
           category: item.category as any,
-          rating: item.rating || 5.0,
-          downloads: item.downloads || '0',
-          version: item.version || '1.0',
-          size: item.size || '0MB',
-          icon: item.icon || 'https://picsum.photos/200',
+          rating: item.rating || 0,
+          year: item.year || '2024',
+          duration: item.duration || '0min',
+          poster: item.poster_url || 'https://picsum.photos/400/600',
+          backdrop: item.backdrop_url || 'https://picsum.photos/1200/600',
           description: item.description || '',
-          modFeatures: Array.isArray(item.mod_features) 
-            ? item.mod_features 
-            : (typeof item.mod_features === 'string' ? JSON.parse(item.mod_features) : []),
+          actors: Array.isArray(item.actors) ? item.actors : [],
           isPremium: item.is_premium === true,
           isVerified: item.is_verified === true,
-          author: item.author_name || 'EsmaelX',
+          director: item.director || 'Desconhecido',
+          videoUrl: item.video_url || '#',
           downloadUrl: item.download_url || '#'
-        }));
-        setApps(formattedData);
+        })));
+      } else {
+        setApps([]);
       }
     } catch (err: any) {
-      console.error("Supabase Error:", err);
-      setErrorMsg(err.message || "Erro de conexão com o Supabase.");
+      console.error("Supabase fail:", err);
+      setApps([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchApps();
+  useEffect(() => { 
+    // Simulação de "Boot" do sistema para efeito extraordinário
+    const bootTimer = setTimeout(() => {
+      setIsBooting(false);
+      fetchMovies();
+    }, 2000);
+    return () => clearTimeout(bootTimer);
   }, []);
 
+  useEffect(() => { localStorage.setItem('esmael_cine_favs', JSON.stringify(favorites)); }, [favorites]);
+  useEffect(() => { localStorage.setItem('esmael_energy', isEnergySaving.toString()); }, [isEnergySaving]);
+  useEffect(() => { localStorage.setItem('esmael_lang', lang); }, [lang]);
+  useEffect(() => { localStorage.setItem('esmael_theme', theme); }, [theme]);
+
   const t = translations[lang] || translations['pt'];
-  
-  const themeColors: Record<ThemeColor, string> = {
-    blue: 'blue-500', 
-    emerald: 'emerald-500', 
-    rose: 'rose-500', 
-    amber: 'amber-500', 
-    purple: 'purple-500', 
-    cyan: 'cyan-400',
-    red: 'red-600',
-    orange: 'orange-500',
-    lime: 'lime-400',
-    fuchsia: 'fuchsia-500'
-  };
+  const themeColors: Record<ThemeColor, string> = { blue: 'blue-500', emerald: 'emerald-500', rose: 'rose-500', amber: 'amber-500', purple: 'purple-500', cyan: 'cyan-400', red: 'red-600', orange: 'orange-500', lime: 'lime-400', fuchsia: 'fuchsia-500' };
+  const colorBase = themeColors[theme].split('-')[0];
 
-  const activeColor = themeColors[theme];
-  const colorBase = activeColor.split('-')[0];
-
-  const filteredApps = useMemo(() => {
-    let result = apps.filter(app => {
-      const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
-      const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-
-    if (sortOption === 'name') result.sort((a, b) => a.name.localeCompare(b.name));
+  const filteredMovies = useMemo(() => {
+    let result = apps.filter(m => (selectedCategory === 'All' || m.category === selectedCategory) && m.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    if (sortOption === 'name') result.sort((a, b) => a.title.localeCompare(b.title));
     else if (sortOption === 'rating') result.sort((a, b) => b.rating - a.rating);
-    else if (sortOption === 'size') result.sort((a, b) => (parseFloat(b.size) || 0) - (parseFloat(a.size) || 0));
-
+    else if (sortOption === 'year') result.sort((a, b) => b.year.localeCompare(a.year));
     return result;
   }, [apps, selectedCategory, searchQuery, sortOption]);
 
-  const verifiedApps = useMemo(() => apps.filter(a => a.isVerified), [apps]);
+  if (isBooting) {
+    return (
+      <div className="fixed inset-0 bg-black z-[1000] flex flex-col items-center justify-center space-y-8">
+        <div className={`w-24 h-24 border-2 border-${colorBase}-500/20 rounded-full flex items-center justify-center relative`}>
+           <div className={`absolute inset-0 border-t-2 border-${colorBase}-500 rounded-full animate-spin`}></div>
+           <i className="fa-solid fa-clapperboard text-3xl animate-pulse"></i>
+        </div>
+        <div className="text-center space-y-2">
+           <h2 className="text-[10px] font-black tracking-[0.6em] uppercase text-white/40">EsmaelX Secure Boot</h2>
+           <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden">
+              <div className={`h-full bg-${colorBase}-500 animate-[progress_2s_ease-in-out_forwards]`}></div>
+           </div>
+        </div>
+        <style>{`
+          @keyframes progress { 0% { width: 0%; } 100% { width: 100%; } }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
-    <div className={`min-h-screen bg-black text-white relative overflow-x-hidden theme-${theme}`} onMouseMove={handleMouseMove}>
+    <div className={`min-h-screen bg-black text-white relative overflow-x-hidden`} onMouseMove={handleMouseMove}>
+      {/* Aurora de fundo AMOLED-friendly */}
       {!isEnergySaving && (
         <div 
-          className={`fixed w-[80%] h-[80%] bg-${colorBase}-600/10 rounded-full blur-[180px] pointer-events-none transition-all duration-[2s] ease-out aurora-blob`}
-          style={{ top: `${mousePos.y * 0.5 - 20}%`, left: `${mousePos.x * 0.5 - 20}%`, transform: `translate(-50%, -50%)` }}
+          className={`fixed w-[80%] h-[80%] bg-${colorBase}-600/5 rounded-full blur-[180px] pointer-events-none transition-all duration-[3s] ease-out aurora-blob`}
+          style={{ top: `${mousePos.y * 0.4 - 20}%`, left: `${mousePos.x * 0.4 - 20}%`, transform: `translate(-50%, -50%)` }}
         />
       )}
 
-      <Navbar 
-        onSearch={setSearchQuery} 
-        onOpenDev={() => setShowDevProfile(true)}
-        language={lang}
-        setLanguage={setLang}
-        theme={theme}
-        setTheme={setTheme}
-        activeColor={activeColor}
-        sortOption={sortOption}
-        setSortOption={setSortOption}
-        isEnergySaving={isEnergySaving}
-        setIsEnergySaving={setIsEnergySaving}
-      />
+      <Navbar onSearch={setSearchQuery} language={lang} activeColor={themeColors[theme]} />
 
-      <main className="container mx-auto px-6 pt-32 pb-20">
-        {!searchQuery && selectedCategory === 'All' && verifiedApps.length > 0 && (
-          <section className="mb-16 animate-soft-zoom">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 bg-${colorBase}-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-${colorBase}-500/40`}>
-                  <i className="fa-solid fa-certificate"></i>
-                </div>
-                <div>
-                  <h2 className="text-xl font-black uppercase tracking-tighter">{t.verifiedOfficial}</h2>
-                  <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest flex items-center gap-1">
-                    {t.qualityCertified} <i className={`fa-solid fa-circle-check text-${colorBase}-500`}></i>
-                  </p>
-                </div>
-              </div>
-              <button onClick={fetchApps} className="w-10 h-10 glass rounded-xl flex items-center justify-center text-gray-500 hover:text-white transition-all border border-white/5 active:scale-90">
-                <i className={`fa-solid fa-arrows-rotate ${loading ? 'animate-spin' : ''}`}></i>
-              </button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-              {verifiedApps.map(app => (
-                <AppCard key={app.id} app={app} onClick={() => setSelectedApp(app)} activeColor={activeColor} isFavorite={favorites.includes(app.id)} onToggleFavorite={() => {
-                  setFavorites(prev => prev.includes(app.id) ? prev.filter(f => f !== app.id) : [...prev, app.id]);
-                }} />
-              ))}
-            </div>
-            <div className="mt-12 h-[1px] w-full bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-          </section>
-        )}
-
-        <header className="mb-10">
-          <h2 className="text-xs font-black text-gray-500 uppercase tracking-[0.4em] mb-2">{t.systemLibrary}</h2>
-          <p className="text-gray-400 text-sm max-w-2xl font-medium tracking-tight">{t.exploringDatabase}</p>
+      <main className="container mx-auto px-6 pt-52 pb-20 min-h-[80vh]">
+        <header className="mb-24 space-y-6 text-center lg:text-left animate-soft-zoom">
+           <div className="flex items-center gap-4 justify-center lg:justify-start">
+              <div className={`h-[1px] w-12 bg-gradient-to-r from-${colorBase}-500 to-transparent`}></div>
+              <span className={`text-${colorBase}-500 text-[10px] font-black uppercase tracking-[0.5em]`}>EsmaelX Originals</span>
+           </div>
+           <h1 className="text-7xl md:text-[11rem] font-black tracking-tighter mb-4 leading-[0.8]">
+             PURE <span className={`text-transparent bg-clip-text bg-gradient-to-b from-white to-white/5`}>VISION</span>
+           </h1>
+           <p className="text-gray-500 max-w-2xl mx-auto lg:mx-0 text-lg font-medium leading-relaxed opacity-60 border-l-0 lg:border-l-2 border-white/5 pl-0 lg:pl-6">
+              {t.heroDesc}
+           </p>
         </header>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-2">
-            {(['All', 'Game', 'App', 'Utility', 'Social'] as Category[]).map(cat => (
-              <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedCategory === cat ? `bg-${colorBase}-500 text-white border-${colorBase}-500 shadow-lg shadow-${colorBase}-500/20` : 'bg-white/5 border-white/5 text-gray-500 hover:text-white hover:bg-white/10'}`}>
-                {t[`category${cat as 'All' | 'Game' | 'App' | 'Utility' | 'Social'}`]}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-10 mb-20">
+          <div className="flex gap-3 overflow-x-auto no-scrollbar py-2">
+            {(['All', 'Ação', 'Terror', 'Comédia', 'Ficção', 'Drama', 'Série'] as Category[]).map(cat => (
+              <button 
+                key={cat} 
+                onClick={() => setSelectedCategory(cat)} 
+                className={`px-10 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border whitespace-nowrap ${selectedCategory === cat ? `bg-${colorBase}-500 text-white border-${colorBase}-500 shadow-2xl scale-105` : 'bg-white/5 border-white/5 text-gray-500 hover:text-white hover:bg-white/10'}`}
+              >
+                {cat === 'All' ? t.categoryAll : cat}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-2 glass px-3 py-1.5 rounded-xl text-[9px] font-black uppercase text-gray-500 border-white/5">
-            <i className="fa-solid fa-sort"></i>
+          <div className="flex items-center gap-5 glass px-8 py-4 rounded-2xl text-[9px] font-black uppercase text-gray-500 border-white/5 shadow-2xl">
+            <i className="fa-solid fa-sort text-white/20"></i>
             <span>{t.sortBy}:</span>
-            <select value={sortOption} onChange={(e) => setSortOption(e.target.value as SortOption)} className="bg-transparent border-none focus:outline-none text-white cursor-pointer ml-1 text-[9px] font-black uppercase">
+            <select value={sortOption} onChange={(e) => setSortOption(e.target.value as SortOption)} className="bg-transparent border-none focus:outline-none text-white cursor-pointer font-black uppercase">
               <option value="default" className="bg-black">{t.recent}</option>
               <option value="name" className="bg-black">{t.sortName}</option>
               <option value="rating" className="bg-black">{t.sortRating}</option>
-              <option value="size" className="bg-black">{t.sortSize}</option>
+              <option value="year" className="bg-black">{t.sortYear}</option>
             </select>
           </div>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="glass p-3 rounded-[1.8rem] aspect-[3/4] animate-pulse bg-white/5" />)}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="glass p-2 rounded-[2rem] aspect-[2/3] animate-pulse bg-white/[0.02]" />)}
           </div>
-        ) : errorMsg ? (
-          <div className="text-center py-20 animate-fade-in">
-            <div className="inline-block p-4 bg-rose-500/10 rounded-full mb-4">
-              <i className="fa-solid fa-circle-exclamation text-4xl text-rose-500"></i>
-            </div>
-            <p className="font-black uppercase tracking-widest text-xs text-rose-400 mb-2">{t.supabaseError}</p>
-            <p className="text-gray-500 text-[10px] max-w-md mx-auto">{errorMsg}</p>
-            <button onClick={fetchApps} className="mt-6 px-6 py-2 glass rounded-xl text-[10px] font-black uppercase hover:bg-white/10 border-white/10">{t.tryAgain}</button>
-          </div>
-        ) : filteredApps.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {filteredApps.map(app => (
+        ) : filteredMovies.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            {filteredMovies.map(movie => (
               <AppCard 
-                key={app.id} 
-                app={app} 
-                onClick={() => setSelectedApp(app)} 
-                activeColor={activeColor} 
-                isFavorite={favorites.includes(app.id)} 
-                onToggleFavorite={() => setFavorites(prev => prev.includes(app.id) ? prev.filter(f => f !== app.id) : [...prev, app.id])} 
+                key={movie.id} 
+                app={movie} 
+                onClick={() => setSelectedApp(movie)} 
+                activeColor={themeColors[theme]} 
+                isFavorite={favorites.includes(movie.id)} 
+                onToggleFavorite={() => setFavorites(f => f.includes(movie.id) ? f.filter(x => x !== movie.id) : [...f, movie.id])} 
               />
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 animate-fade-in opacity-50">
-            <i className="fa-solid fa-database text-4xl mb-4 text-emerald-500"></i>
-            <p className="font-black uppercase tracking-widest text-xs">{t.waitingProjects}</p>
+          <div className="flex flex-col items-center justify-center py-40 text-center space-y-8 animate-fade-in">
+             <div className="relative">
+                <div className={`absolute inset-0 bg-${colorBase}-500/10 blur-[60px] rounded-full`}></div>
+                <div className={`w-32 h-32 glass border border-white/10 rounded-full flex items-center justify-center text-5xl text-${colorBase}-500 shadow-2xl relative z-10`}>
+                   <i className="fa-solid fa-box-open animate-pulse"></i>
+                </div>
+             </div>
+             <div className="space-y-4 max-w-lg">
+                <h3 className="text-2xl font-black tracking-tighter">Silêncio no Set...</h3>
+                <p className="text-gray-500 font-medium leading-relaxed text-sm">
+                  Nossa videoteca está passando por uma manutenção criativa ou a curadoria está selecionando os próximos sucessos. Volte em breve!
+                </p>
+                <button 
+                  onClick={fetchMovies}
+                  className={`mt-6 px-10 py-4 bg-white/5 border border-white/10 rounded-full text-[9px] font-black uppercase tracking-[0.2em] text-white hover:bg-white/10 transition-all active:scale-95`}
+                >
+                  <i className="fa-solid fa-rotate-right mr-2"></i> Recarregar Sistema
+                </button>
+             </div>
           </div>
         )}
       </main>
 
-      {selectedApp && <AppDetails app={selectedApp} onClose={() => setSelectedApp(null)} language={lang} activeColor={activeColor} />}
-      {showDevProfile && <DevProfile onClose={() => setShowDevProfile(false)} language={lang} activeColor={activeColor} />}
-      <AIAssistant language={lang} activeColor={activeColor} apps={apps} onSelectApp={(app) => { setSelectedApp(app); setSearchQuery(''); }} />
+      {/* Footer Legal e Disclaimer Reforçado */}
+      <footer className="container mx-auto px-6 py-24 border-t border-white/5">
+        <div className="glass p-12 rounded-[3.5rem] border border-white/5 bg-white/[0.01] flex flex-col lg:flex-row gap-16 items-center justify-between">
+           <div className="space-y-6 max-w-2xl text-center lg:text-left">
+              <h4 className={`text-[10px] font-black text-${colorBase}-500 uppercase tracking-[0.5em]`}>Protocolo de Transparência</h4>
+              <p className="text-gray-500 text-sm leading-relaxed font-medium italic opacity-80">
+                O <strong>EsmaelX Cine</strong> funciona estritamente como um indexador automático. Todos os fluxos de mídia e links exibidos são hospedados em servidores de terceiros de responsabilidade de seus proprietários. Não armazenamos nenhum conteúdo em nossos servidores. Devido à natureza dessas fontes externas, links podem sofrer instabilidades ou serem removidos sem aviso prévio. Agradecemos a compreensão.
+              </p>
+           </div>
+           <div className="flex flex-col items-center lg:items-end gap-8 min-w-[220px]">
+              <div className="flex gap-5">
+                 <div className="w-12 h-12 glass rounded-2xl flex items-center justify-center border-white/10 text-gray-600 hover:text-white transition-all cursor-help">
+                    <i className="fa-solid fa-fingerprint"></i>
+                 </div>
+                 <div className="w-12 h-12 glass rounded-2xl flex items-center justify-center border-white/10 text-gray-600 hover:text-white transition-all cursor-help">
+                    <i className="fa-solid fa-eye-slash"></i>
+                 </div>
+              </div>
+              <div className="text-center lg:text-right">
+                <p className="text-[10px] font-black text-white tracking-[0.2em] mb-1">ESMAELX PLATFORM</p>
+                <p className="text-[8px] font-black text-gray-700 uppercase tracking-widest">© 2024 • Engineered for Excellence</p>
+              </div>
+           </div>
+        </div>
+      </footer>
+
+      {selectedApp && <AppDetails app={selectedApp} onClose={() => setSelectedApp(null)} language={lang} activeColor={themeColors[theme]} />}
+      {showDevProfile && <DevProfile onClose={() => setShowDevProfile(false)} language={lang} activeColor={themeColors[theme]} />}
+      
+      <AIAssistant language={lang} activeColor={themeColors[theme]} apps={apps} onSelectApp={setSelectedApp} />
+      
+      <CineHub 
+        language={lang} 
+        setLanguage={setLang} 
+        theme={theme} 
+        setTheme={setTheme} 
+        activeColor={themeColors[theme]} 
+        isEnergySaving={isEnergySaving}
+        setIsEnergySaving={setIsEnergySaving}
+        onOpenDev={() => setShowDevProfile(true)}
+      />
     </div>
   );
 };

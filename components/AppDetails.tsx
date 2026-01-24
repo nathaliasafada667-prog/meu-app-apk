@@ -1,43 +1,26 @@
 
 import React, { useEffect, useState } from 'react';
-import { AppItem, Language } from '../types';
+import { MovieItem, Language } from '../types';
 import { translations } from '../translations';
-import { translateAppDetails } from '../services/geminiService';
 
 interface AppDetailsProps {
-  app: AppItem;
+  app: MovieItem;
   onClose: () => void;
   language: Language;
   activeColor: string;
 }
 
 const AppDetails: React.FC<AppDetailsProps> = ({ app, onClose, language, activeColor }) => {
-  const [downloading, setDownloading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [redirecting, setRedirecting] = useState(false);
   const [isScanning, setIsScanning] = useState(true);
   const [scanStep, setScanStep] = useState(0);
+  const [showShareToast, setShowShareToast] = useState(false);
   
-  const [displayDescription, setDisplayDescription] = useState(app.description);
-  const [displayFeatures, setDisplayFeatures] = useState<string[]>(app.modFeatures);
-  const [isTranslating, setIsTranslating] = useState(false);
-
   const t = translations[language] || translations['pt'];
   const colorBase = activeColor.split('-')[0];
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     
-    if (language !== 'pt' && !app.isVerified) {
-      setIsTranslating(true);
-      translateAppDetails(app.name, app.description, app.modFeatures, language)
-        .then(data => {
-          if (data.description) setDisplayDescription(data.description);
-          if (data.features) setDisplayFeatures(data.features);
-        })
-        .finally(() => setIsTranslating(false));
-    }
-
     let step = 0;
     const scanInterval = setInterval(() => {
       setScanStep(step);
@@ -46,37 +29,31 @@ const AppDetails: React.FC<AppDetailsProps> = ({ app, onClose, language, activeC
         clearInterval(scanInterval);
         setTimeout(() => setIsScanning(false), 400);
       }
-    }, 500);
+    }, 400);
 
     return () => {
       document.body.style.overflow = 'unset';
       clearInterval(scanInterval);
     };
-  }, [language, app, t.scanSteps.length]);
+  }, [t.scanSteps.length]);
+
+  const handleWatch = () => {
+    window.open(app.videoUrl, '_blank');
+  };
 
   const handleDownload = () => {
-    if (downloading) return;
-    setDownloading(true);
-    let current = 0;
-    const interval = setInterval(() => {
-      const increment = Math.floor(Math.random() * 15) + 5; 
-      current += increment;
-      
-      if (current >= 100) {
-        current = 100;
-        setProgress(100);
-        clearInterval(interval);
-        setRedirecting(true);
-        setTimeout(() => {
-          window.open(app.downloadUrl, '_blank');
-          setDownloading(false);
-          setRedirecting(false);
-          setProgress(0);
-        }, 1000);
-      } else {
-        setProgress(current);
-      }
-    }, 80);
+    window.open(app.downloadUrl, '_blank');
+  };
+
+  const handleShare = () => {
+    const shareText = `🍿 Assista "${app.title}" em 4K HDR no EsmaelX Cine!`;
+    if (navigator.share) {
+      navigator.share({ title: app.title, text: shareText, url: window.location.href });
+    } else {
+      navigator.clipboard.writeText(shareText + "\n" + window.location.href);
+      setShowShareToast(true);
+      setTimeout(() => setShowShareToast(false), 3000);
+    }
   };
 
   if (isScanning) {
@@ -85,8 +62,8 @@ const AppDetails: React.FC<AppDetailsProps> = ({ app, onClose, language, activeC
         <div className="w-24 h-24 mb-8 relative">
            <div className={`absolute inset-0 border-4 border-${colorBase}-500/10 rounded-full`}></div>
            <div className={`absolute inset-0 border-4 border-t-${colorBase}-500 rounded-full animate-spin`}></div>
-           <div className="absolute inset-0 flex items-center justify-center">
-              <i className={`fa-solid fa-shield-check text-3xl text-${colorBase}-500 animate-pulse`}></i>
+           <div className="absolute inset-0 flex items-center justify-center text-3xl text-white">
+              <i className="fa-solid fa-film animate-pulse"></i>
            </div>
         </div>
         <div className="text-center space-y-3">
@@ -100,98 +77,111 @@ const AppDetails: React.FC<AppDetailsProps> = ({ app, onClose, language, activeC
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-fade-in">
-      <div className="glass w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-[2.5rem] relative p-6 md:p-10 scrollbar-hide animate-soft-zoom border-white/10 shadow-2xl">
-        <button 
-          onClick={onClose}
-          className="absolute top-6 right-6 w-10 h-10 glass flex items-center justify-center rounded-full hover:bg-white/10 transition-all z-10 border-white/10 active:scale-90"
-        >
-          <i className="fa-solid fa-xmark"></i>
-        </button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/98 backdrop-blur-xl animate-fade-in">
+      {showShareToast && (
+        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[200] glass px-6 py-3 rounded-full border-emerald-500/50 flex items-center gap-3 animate-soft-zoom">
+          <i className="fa-solid fa-circle-check text-emerald-500"></i>
+          <span className="text-[10px] font-black uppercase tracking-widest">Link do Filme Copiado!</span>
+        </div>
+      )}
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
-          <div className="md:col-span-4 space-y-6">
-            <div className="relative group overflow-hidden rounded-[2rem] shadow-2xl aspect-square">
-               <img src={app.icon} alt={app.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-               <div className={`absolute inset-0 bg-gradient-to-t from-black/80 to-transparent`}></div>
-               <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full bg-emerald-500 animate-pulse`}></div>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">{t.verifiedBy}</span>
-               </div>
-            </div>
-            
-            <div className="glass p-5 rounded-3xl space-y-4 border border-white/5 bg-white/[0.02]">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 text-[9px] font-black uppercase tracking-widest">{t.version}</span>
-                <span className={`px-3 py-1 bg-${colorBase}-500/10 text-${colorBase}-400 rounded-lg text-[10px] font-black`}>{app.version}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 text-[9px] font-black uppercase tracking-widest">{t.size}</span>
-                <span className="font-black text-white text-xs">{app.size}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 text-[9px] font-black uppercase tracking-widest">{t.rating}</span>
-                <span className="text-yellow-400 font-black text-xs">{app.rating} <i className="fa-solid fa-star text-[9px] ml-1"></i></span>
-              </div>
-            </div>
+      {/* Background Image Desfocada */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <img src={app.backdrop} alt="" className="w-full h-full object-cover blur-3xl" />
+      </div>
 
-            <button 
-              onClick={handleDownload}
-              disabled={downloading}
-              className={`w-full py-5 rounded-2xl font-black text-sm transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95 relative overflow-hidden ${
-                redirecting 
-                ? 'bg-emerald-600 text-white' 
-                : `bg-white text-black hover:bg-gray-100 disabled:opacity-50`
-              }`}
-            >
-              {redirecting ? (
-                <><i className="fa-solid fa-check"></i>{t.redirecting}</>
-              ) : downloading ? (
-                <span className="relative z-10 uppercase tracking-widest">{t.generatingLink} {progress}%</span>
-              ) : (
-                <><i className="fa-solid fa-download"></i>{t.downloadBtn}</>
-              )}
-              {downloading && !redirecting && (
-                 <div className={`absolute bottom-0 left-0 h-1 bg-${colorBase}-500 transition-all duration-300`} style={{ width: `${progress}%` }}></div>
-              )}
-            </button>
-          </div>
+      <div className="glass w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-[3rem] relative scrollbar-hide animate-soft-zoom border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.8)] overflow-x-hidden">
+        
+        {/* Header com Banner */}
+        <div className="relative h-[40vh] min-h-[300px] w-full">
+           <img src={app.backdrop} alt={app.title} className="w-full h-full object-cover" />
+           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+           
+           <div className="absolute top-6 right-6 flex items-center gap-3">
+              <button onClick={handleShare} className="w-12 h-12 glass flex items-center justify-center rounded-full hover:bg-white/10 transition-all border-white/10 active:scale-90 text-white">
+                <i className="fa-solid fa-share-nodes"></i>
+              </button>
+              <button onClick={onClose} className="w-12 h-12 glass flex items-center justify-center rounded-full hover:bg-white/10 transition-all border-white/10 active:scale-90 text-white">
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+           </div>
 
-          <div className="md:col-span-8 space-y-8">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                 <span className={`text-[9px] font-black text-${colorBase}-500 uppercase tracking-widest`}>{t.modEdition}</span>
-                 <div className="h-[1px] flex-1 bg-white/5"></div>
+           <div className="absolute bottom-8 left-10 right-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div className="space-y-3">
+                 <div className="flex items-center gap-3">
+                    <span className={`px-3 py-1 bg-${colorBase}-500 text-white text-[10px] font-black rounded-lg uppercase`}>{app.category}</span>
+                    <span className="text-white/60 text-[10px] font-black uppercase tracking-widest">{app.year} • {app.duration}</span>
+                 </div>
+                 <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-white">{app.title}</h2>
               </div>
               
-              <div className="flex items-center gap-2 mb-4 bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-2xl w-fit">
-                  <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-[10px]">
-                    <i className="fa-solid fa-check"></i>
-                  </div>
-                  <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">
-                    {t.officialDev}: {app.author}
-                  </span>
+              <div className="flex items-center gap-4">
+                 <button 
+                  onClick={handleWatch}
+                  className={`px-10 py-5 bg-${colorBase}-500 hover:bg-${colorBase}-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest transition-all shadow-2xl shadow-${colorBase}-500/30 flex items-center gap-3 active:scale-95`}
+                 >
+                    <i className="fa-solid fa-play"></i> {t.watchBtn}
+                 </button>
+                 <button 
+                  onClick={handleDownload}
+                  className="px-6 py-5 glass hover:bg-white/10 text-white rounded-[2rem] font-black text-sm uppercase transition-all flex items-center gap-3 active:scale-95 border border-white/10"
+                 >
+                    <i className="fa-solid fa-download"></i>
+                 </button>
+              </div>
+           </div>
+        </div>
+
+        <div className="p-10 grid grid-cols-1 md:grid-cols-12 gap-12">
+           <div className="md:col-span-8 space-y-8">
+              <div className="space-y-4">
+                 <h4 className="text-[11px] font-black text-gray-500 uppercase tracking-[0.3em] flex items-center gap-2">
+                    <i className={`fa-solid fa-quote-left text-${colorBase}-500`}></i> {t.aboutMovie}
+                 </h4>
+                 <p className="text-gray-300 leading-relaxed text-xl font-medium">
+                    {app.description}
+                 </p>
               </div>
 
-              <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-4">{app.name}</h2>
-              <div className="flex gap-2 flex-wrap">
-                {displayFeatures.map((f, i) => (
-                  <span key={i} className="text-[8px] font-black bg-white/5 text-gray-400 px-4 py-2 rounded-xl uppercase border border-white/5">
-                    <i className={`fa-solid fa-bolt-lightning text-${colorBase}-400 mr-2`}></i>{f}
-                  </span>
-                ))}
+              <div className="space-y-4">
+                 <h4 className="text-[11px] font-black text-gray-500 uppercase tracking-[0.3em]">{t.mainFeatures}</h4>
+                 <div className="flex flex-wrap gap-2">
+                    {app.actors.map((actor, i) => ( // Usando actors agora
+                      <span key={actor} className="px-5 py-2 glass border border-white/5 rounded-full text-xs font-bold text-gray-400">
+                         {actor}
+                      </span>
+                    ))}
+                 </div>
               </div>
-            </div>
+           </div>
 
-            <div className="space-y-4">
-              <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">{t.aboutMod}</h4>
-              <div className={`text-gray-400 leading-relaxed text-lg font-medium transition-opacity duration-300 ${isTranslating ? 'opacity-30' : 'opacity-100'}`}>
-                {displayDescription}
-                <br />
-                <span className="text-white font-bold mt-2 block">{t.optimizedText}</span>
+           <div className="md:col-span-4 space-y-6">
+              <div className="glass p-6 rounded-[2rem] border border-white/5 space-y-6 bg-white/[0.02]">
+                 <div className="flex justify-between items-center">
+                    <span className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{t.directorLabel}</span>
+                    <span className="text-white font-black text-xs">{app.director}</span>
+                 </div>
+                 <div className="h-[1px] w-full bg-white/5"></div>
+                 <div className="flex justify-between items-center">
+                    <span className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{t.ratingLabel}</span>
+                    <div className="flex items-center gap-2">
+                       <i className="fa-solid fa-star text-yellow-500 text-[10px]"></i>
+                       <span className="text-white font-black text-xs">{app.rating}</span>
+                    </div>
+                 </div>
+                 <div className="h-[1px] w-full bg-white/5"></div>
+                 <div className="flex justify-between items-center">
+                    <span className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{t.yearLabel}</span>
+                    <span className="text-white font-black text-xs">{app.year}</span>
+                 </div>
               </div>
-            </div>
-          </div>
+
+              <div className={`p-6 rounded-[2rem] border border-${colorBase}-500/20 bg-${colorBase}-500/5`}>
+                 <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">
+                    "{t.optimizedText}"
+                 </p>
+              </div>
+           </div>
         </div>
       </div>
     </div>
