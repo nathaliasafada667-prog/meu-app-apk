@@ -1,4 +1,3 @@
-
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -7,6 +6,13 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
-    outDir: 'dist'
+    outDir: 'dist',
+    minify: 'esbuild',
+    sourcemap: false
+  },
+  server: {
+    fs: {
+      strict: false
+    }
   }
 });
