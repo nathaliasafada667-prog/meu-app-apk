@@ -49,10 +49,10 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ language, activeColor, apps, 
         contents: prompt,
       });
 
-      const aiText = response.text || "Desculpe, não consegui processar isso.";
+      const aiText = response.text || t.aiError;
       setMessages(prev => [...prev, { role: 'ai', text: aiText }]);
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'ai', text: "Erro na conexão com o sistema central de IA." }]);
+      setMessages(prev => [...prev, { role: 'ai', text: t.aiMaintenance }]);
     } finally {
       setIsTyping(false);
     }
@@ -60,10 +60,9 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ language, activeColor, apps, 
 
   return (
     <div className="fixed bottom-6 right-6 z-[100]">
-      {/* Toggle Button */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-16 h-16 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(var(--active-rgb),0.4)] transition-all duration-500 active:scale-90 relative ${isOpen ? 'bg-red-600 rotate-90' : `bg-${colorBase}-600 hover:scale-110`}`}
+        className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 active:scale-90 ${isOpen ? 'bg-zinc-900 rotate-90 border border-white/10' : `bg-${colorBase}-600 hover:scale-110`}`}
       >
         <i className={`fa-solid ${isOpen ? 'fa-xmark' : 'fa-robot'} text-2xl text-white`}></i>
         {!isOpen && (
@@ -71,51 +70,43 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ language, activeColor, apps, 
         )}
       </button>
 
-      {/* Chat Window */}
       {isOpen && (
-        <div className="absolute bottom-20 right-0 w-[350px] max-w-[90vw] h-[500px] glass rounded-[2.5rem] flex flex-col overflow-hidden border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.8)] animate-soft-zoom">
-          {/* Header */}
-          <div className={`p-6 bg-gradient-to-r from-${colorBase}-600/40 to-black border-b border-white/5`}>
+        <div className="absolute bottom-20 right-0 w-[350px] max-w-[90vw] h-[500px] glass rounded-[2.5rem] flex flex-col overflow-hidden border border-white/10 shadow-[0_40px_80px_rgba(0,0,0,0.9)] animate-soft-zoom">
+          <div className={`p-6 bg-gradient-to-r from-${colorBase}-600/20 to-black border-b border-white/5`}>
             <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-3">
                <i className="fa-solid fa-wand-magic-sparkles text-purple-400"></i>
                {t.aiChatTitle}
             </h3>
           </div>
 
-          {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-hide bg-black/40">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-hide bg-black/60">
             {messages.length === 0 && (
-              <div className="text-center py-10">
-                <div className={`w-16 h-16 rounded-3xl bg-${colorBase}-600/10 mx-auto mb-4 flex items-center justify-center border border-${colorBase}-500/20`}>
-                  <i className={`fa-solid fa-comment-dots text-${colorBase}-400 text-2xl`}></i>
-                </div>
-                <p className="text-gray-500 text-xs font-medium px-10 leading-relaxed">
-                  Diga o que você está procurando e eu encontrarei o mod perfeito para você.
-                </p>
+              <div className="text-center py-10 opacity-40">
+                <i className={`fa-solid fa-message-bot text-4xl mb-4 text-${colorBase}-400`}></i>
+                <p className="text-xs font-bold px-10">{t.aiWelcome}</p>
               </div>
             )}
             
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-                <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm font-medium ${m.role === 'user' ? `bg-${colorBase}-600 text-white rounded-tr-none` : 'bg-white/5 text-gray-200 border border-white/5 rounded-tl-none'}`}>
+                <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm ${m.role === 'user' ? `bg-${colorBase}-600 text-white rounded-tr-none shadow-lg` : 'bg-white/5 text-zinc-300 border border-white/5 rounded-tl-none'}`}>
                   {m.text}
                 </div>
               </div>
             ))}
             
             {isTyping && (
-              <div className="flex justify-start animate-fade-in">
-                 <div className="bg-white/5 px-4 py-3 rounded-2xl rounded-tl-none flex gap-1">
-                    <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"></div>
-                    <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                    <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+              <div className="flex justify-start">
+                 <div className="bg-white/5 px-4 py-2 rounded-2xl flex gap-1 items-center">
+                    <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
+                    <div className="w-1 h-1 bg-white rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                    <div className="w-1 h-1 bg-white rounded-full animate-bounce [animation-delay:0.4s]"></div>
                  </div>
               </div>
             )}
           </div>
 
-          {/* Input */}
-          <div className="p-4 border-t border-white/5 bg-[#0d0d0d]">
+          <div className="p-4 bg-zinc-950 border-t border-white/5">
              <div className="relative">
                 <input 
                   type="text"
@@ -123,11 +114,11 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ language, activeColor, apps, 
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder={t.aiChatPlaceholder}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-4 pr-12 focus:outline-none focus:border-white/20 transition-all text-xs font-medium"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-4 pr-12 focus:outline-none focus:border-white/20 text-xs text-white"
                 />
                 <button 
                   onClick={handleSend}
-                  className={`absolute right-2 top-2 w-9 h-9 flex items-center justify-center rounded-xl transition-all ${input.trim() ? `bg-${colorBase}-600 text-white` : 'bg-white/5 text-gray-600 cursor-not-allowed'}`}
+                  className={`absolute right-2 top-2 w-9 h-9 flex items-center justify-center rounded-xl transition-all ${input.trim() ? `bg-${colorBase}-600 text-white` : 'bg-white/5 text-zinc-700 cursor-not-allowed'}`}
                 >
                   <i className="fa-solid fa-paper-plane text-xs"></i>
                 </button>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AppItem } from '../types';
 
@@ -20,53 +21,71 @@ const AppCard: React.FC<AppCardProps> = ({ app, onClick, activeColor, isFavorite
   return (
     <div 
       onClick={onClick}
-      className={`glass glass-hover p-4 rounded-[2rem] cursor-pointer group border-transparent hover:border-${colorName}-500/30 transition-all relative overflow-hidden`}
+      className={`glass glass-hover p-3 rounded-[1.8rem] cursor-pointer group border-transparent hover:border-${colorName}-500/30 transition-all relative overflow-hidden flex flex-col items-center text-center`}
     >
-      <div className="relative mb-4">
-        <img 
-          src={app.icon} 
-          alt={app.name} 
-          className="w-full aspect-square object-cover rounded-3xl shadow-2xl group-hover:scale-105 transition-transform duration-500"
-        />
+      <div className="relative mb-3 w-full">
+        <div className="relative overflow-hidden rounded-2xl shadow-xl group-hover:shadow-${colorName}-500/10 transition-all">
+          <img 
+            src={app.icon} 
+            alt={app.name} 
+            className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+        </div>
         
-        {/* Favorite Button */}
         <button 
           onClick={handleFavClick}
-          className={`absolute top-3 left-3 w-9 h-9 flex items-center justify-center glass rounded-xl backdrop-blur-xl transition-all active:scale-90 ${isFavorite ? 'text-rose-500' : 'text-white/60 hover:text-white'}`}
+          className={`absolute top-2 left-2 w-7 h-7 flex items-center justify-center glass rounded-lg backdrop-blur-xl transition-all active:scale-90 ${isFavorite ? 'text-rose-500' : 'text-white/60 hover:text-white'}`}
         >
-          <i className={`fa-${isFavorite ? 'solid' : 'regular'} fa-heart`}></i>
+          <i className={`fa-${isFavorite ? 'solid' : 'regular'} fa-heart text-[10px]`}></i>
         </button>
 
-        {app.isPremium && (
-          <div className="absolute top-3 right-3 bg-yellow-400 text-black text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest shadow-lg">
-            PREMIUM
-          </div>
-        )}
-        <div className="absolute bottom-3 left-3 glass px-3 py-1 rounded-full text-xs font-bold text-white/90 backdrop-blur-md">
-          {app.version}
+        <div className="absolute top-2 right-2 flex flex-col gap-1.5 items-end">
+          {app.isPremium && (
+            <div className={`bg-${colorName}-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter shadow-lg shadow-black/40`}>
+              PRO
+            </div>
+          )}
+          {app.isVerified && (
+            <div className="bg-blue-500 text-white w-5 h-5 flex items-center justify-center rounded-full shadow-lg shadow-blue-500/40 border border-black/20" title="Verificado Oficial">
+              <i className="fa-solid fa-check text-[10px]"></i>
+            </div>
+          )}
         </div>
       </div>
       
-      <div className="space-y-2">
-        <div className="flex justify-between items-start">
-          <h3 className={`font-black text-lg truncate pr-2 group-hover:text-${colorName}-400 transition-colors`}>
-            {app.name}
-          </h3>
-          <div className="flex items-center gap-1 text-yellow-400 text-sm shrink-0">
-            <i className="fa-solid fa-star"></i>
-            <span className="font-bold">{app.rating}</span>
+      <div className="w-full space-y-1">
+        {app.isVerified && (
+          <div className="flex items-center justify-center gap-1 mb-0.5">
+             <span className="text-[7px] font-black text-blue-400 uppercase tracking-widest">
+                {app.author}
+             </span>
+             <i className="fa-solid fa-circle-check text-blue-500 text-[8px]"></i>
           </div>
+        )}
+        {!app.isVerified && (
+          <span className="text-[7px] font-black text-gray-600 uppercase tracking-widest block mb-0.5">
+            {app.author}
+          </span>
+        )}
+        
+        <h3 className={`font-black text-sm truncate group-hover:text-${colorName}-400 transition-colors px-1 tracking-tight`}>
+          {app.name}
+        </h3>
+        
+        <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center gap-0.5 text-yellow-400 text-[9px] font-bold">
+            <i className="fa-solid fa-star"></i>
+            <span>{app.rating}</span>
+          </div>
+          <div className="w-[1px] h-2 bg-white/10"></div>
+          <span className="text-[9px] text-gray-500 font-bold uppercase tracking-tight">
+            {app.size}
+          </span>
         </div>
         
-        <p className="text-gray-500 text-sm line-clamp-2 min-h-[40px]">
-          {app.description}
-        </p>
-        
-        <div className="flex items-center justify-between pt-2">
-          <span className="text-[10px] text-gray-500 font-black uppercase tracking-wider">
-            <i className="fa-solid fa-download mr-1"></i> {app.downloads}
-          </span>
-          <span className={`text-[10px] text-${colorName}-400 font-black bg-${colorName}-500/10 px-3 py-1.5 rounded-xl uppercase border border-${colorName}-500/10`}>
+        <div className="pt-1">
+          <span className={`text-[8px] text-${colorName}-400 font-black bg-${colorName}-500/5 px-2.5 py-1 rounded-lg uppercase border border-${colorName}-500/10 inline-block`}>
             {app.category}
           </span>
         </div>
