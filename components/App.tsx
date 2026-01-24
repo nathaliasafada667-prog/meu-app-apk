@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [apps, setApps] = useState<MovieItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isBooting, setIsBooting] = useState(true);
+  const [maintenance, setMaintenance] = useState<{enabled: boolean, message: string}>({ enabled: false, message: '' });
   const [selectedCategory, setSelectedCategory] = useState<Category>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedApp, setSelectedApp] = useState<MovieItem | null>(null);
@@ -31,9 +32,36 @@ const App: React.FC = () => {
     setMousePos({ x: (e.clientX / window.innerWidth) * 100, y: (e.clientY / window.innerHeight) * 100 });
   };
 
+  const checkSystemStatus = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('maintenance_enabled, maintenance_message')
+        .eq('id', 1)
+        .single();
+      
+      if (!error && data) {
+        setMaintenance({
+          enabled: data.maintenance_enabled,
+          message: data.maintenance_message
+        });
+        return data.maintenance_enabled;
+      }
+    } catch (err) {
+      console.error("Erro ao checar status do sistema");
+    }
+    return false;
+  };
+
   const fetchMovies = async () => {
     setLoading(true);
     try {
+      const isMaint = await checkSystemStatus();
+      if (isMaint) {
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase.from('movies').select('*').order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -68,7 +96,6 @@ const App: React.FC = () => {
   };
 
   useEffect(() => { 
-    // Simulação de "Boot" do sistema para efeito extraordinário
     const bootTimer = setTimeout(() => {
       setIsBooting(false);
       fetchMovies();
@@ -113,9 +140,54 @@ const App: React.FC = () => {
     );
   }
 
+  // TELA DE MANUTENÇÃO EXTRAORDINÁRIA (MODO HIBERNAÇÃO)
+  if (maintenance.enabled) {
+    return (
+      <div className="fixed inset-0 bg-black z-[2000] flex items-center justify-center p-6 text-center overflow-hidden">
+        {/* Efeito Aurora de Fundo para dar profundidade */}
+        <div className={`absolute w-[120%] h-[120%] bg-${colorBase}-500/5 rounded-full blur-[150px] aurora-blob`}></div>
+        
+        <div className="glass max-w-2xl w-full p-12 md:p-20 rounded-[4rem] border-white/10 relative z-10 space-y-12 animate-soft-zoom shadow-[0_0_120px_rgba(0,0,0,0.8)] bg-black/40">
+           <div className="relative inline-block">
+              <div className={`absolute inset-0 bg-${colorBase}-500/20 blur-[50px] rounded-full animate-pulse`}></div>
+              <div className={`w-36 h-36 rounded-[3rem] bg-${colorBase}-600/10 border border-${colorBase}-500/30 flex items-center justify-center text-6xl text-${colorBase}-500 relative`}>
+                 <i className="fa-solid fa-cloud-moon animate-bounce"></i>
+              </div>
+           </div>
+
+           <div className="space-y-6">
+              <div className="space-y-3">
+                 <span className={`text-[11px] font-black uppercase tracking-[1em] text-${colorBase}-400`}>Acesso Restrito</span>
+                 <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-white uppercase leading-[0.9]">Hibernação Ativa</h1>
+              </div>
+              <div className="h-[1px] w-24 bg-white/10 mx-auto"></div>
+              <p className="text-gray-400 text-xl font-medium leading-relaxed px-4 opacity-90">
+                 {maintenance.message || "O sistema está passando por otimizações de núcleo. Voltamos em breve com novidades extraordinárias."}
+              </p>
+           </div>
+
+           <div className="pt-8 flex flex-col md:flex-row items-center justify-center gap-6">
+              <div className="flex items-center gap-3 glass px-8 py-4 rounded-3xl border-white/5">
+                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.5)]"></div>
+                 <span className="text-[10px] font-black uppercase text-amber-500 tracking-widest">Sincronizando Core...</span>
+              </div>
+              <button 
+                onClick={() => window.location.reload()}
+                className="flex items-center gap-3 glass px-8 py-4 rounded-3xl border-white/10 hover:bg-white/5 transition-all active:scale-95"
+              >
+                <i className="fa-solid fa-rotate-right text-xs"></i>
+                <span className="text-[10px] font-black uppercase text-white tracking-widest">Verificar Novamente</span>
+              </button>
+           </div>
+
+           <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.5em] pt-12">EsmaelX Cine • Exclusive Platform</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen bg-black text-white relative overflow-x-hidden`} onMouseMove={handleMouseMove}>
-      {/* Aurora de fundo AMOLED-friendly */}
       {!isEnergySaving && (
         <div 
           className={`fixed w-[80%] h-[80%] bg-${colorBase}-600/5 rounded-full blur-[180px] pointer-events-none transition-all duration-[3s] ease-out aurora-blob`}
@@ -204,7 +276,6 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Footer Legal e Disclaimer Reforçado */}
       <footer className="container mx-auto px-6 py-24 border-t border-white/5">
         <div className="glass p-12 rounded-[3.5rem] border border-white/5 bg-white/[0.01] flex flex-col lg:flex-row gap-16 items-center justify-between">
            <div className="space-y-6 max-w-2xl text-center lg:text-left">
