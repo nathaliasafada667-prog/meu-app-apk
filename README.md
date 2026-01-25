@@ -1,5 +1,5 @@
 
-# EsmaelX | Premium Black Edition APK Store
+# EsmaelX APK Elite Store
 
 Uma plataforma ultra-moderna de APKs premium com design **AMOLED Black** e **Glassmorphism**. Desenvolvido com tecnologia de ponta para oferecer a melhor experiência UI/UX.
 
