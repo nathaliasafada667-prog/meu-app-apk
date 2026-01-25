@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { ModAppItem, Language } from '../types';
+import { ModAppItem, Language, UserProfile } from '../types';
 import { translations } from '../translations';
 
 interface AppDetailsProps {
@@ -8,12 +8,15 @@ interface AppDetailsProps {
   onClose: () => void;
   language: Language;
   activeColor: string;
+  user: UserProfile | null;
+  onRequireAuth: () => void;
 }
 
-const AppDetails: React.FC<AppDetailsProps> = ({ app, onClose, language, activeColor }) => {
+const AppDetails: React.FC<AppDetailsProps> = ({ app, onClose, language, activeColor, user, onRequireAuth }) => {
   const [isScanning, setIsScanning] = useState(true);
   const [scanStep, setScanStep] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   
   const t = translations[language] || translations['pt'];
   const colorBase = activeColor.split('-')[0];
@@ -35,11 +38,33 @@ const AppDetails: React.FC<AppDetailsProps> = ({ app, onClose, language, activeC
     };
   }, [t.scanSteps.length]);
 
-  const handleDownload = () => {
+  const handleDownloadAttempt = () => {
+    // Se o APP NÃO FOR PREMIUM, qualquer um baixa (mesmo deslogado ou conta free)
+    if (!app.isPremium) {
+      startDownload();
+      return;
+    }
+
+    // Se o APP FOR PREMIUM, exige login
+    if (!user) {
+      onRequireAuth();
+      return;
+    }
+
+    // Se o APP FOR PREMIUM e usuário está logado, exige status Premium
+    if (!user.is_premium) {
+      setShowPaywall(true);
+      return;
+    }
+    
+    startDownload();
+  };
+
+  const startDownload = () => {
     setIsDownloading(true);
     setTimeout(() => {
       setIsDownloading(false);
-      alert('Iniciando transferência segura...');
+      window.open(app.downloadUrl, '_blank');
     }, 2000);
   };
 
@@ -61,6 +86,54 @@ const AppDetails: React.FC<AppDetailsProps> = ({ app, onClose, language, activeC
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black animate-fade-in">
+      {/* Paywall Modal */}
+      {showPaywall && (
+        <div className="absolute inset-0 z-[150] bg-black/95 backdrop-blur-3xl flex items-center justify-center p-6">
+           <div className="glass max-w-md w-full p-10 rounded-[3rem] border-white/10 text-center space-y-8 animate-soft-zoom">
+              <div className={`w-20 h-20 bg-${colorBase}-500/20 rounded-3xl flex items-center justify-center mx-auto`}>
+                 <i className={`fa-solid fa-crown text-3xl text-${colorBase}-500`}></i>
+              </div>
+              <div className="space-y-2">
+                 <h3 className="text-3xl font-black uppercase tracking-tighter italic">Acesso Restrito</h3>
+                 <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest leading-relaxed">
+                   Este aplicativo requer uma assinatura ativa do Protocolo Elite. Escolha seu plano de ativação:
+                 </p>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                 <div className={`p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all text-left group cursor-pointer`}>
+                    <div className="flex justify-between items-center mb-2">
+                       <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Plano Elite 30</span>
+                       <span className={`text-xl font-black text-${colorBase}-500 tracking-tighter italic`}>R$ 10</span>
+                    </div>
+                    <p className="text-white font-black text-sm uppercase">30 Dias de Acesso Total</p>
+                 </div>
+                 
+                 <div className={`p-6 rounded-3xl border border-${colorBase}-500/30 bg-${colorBase}-500/5 hover:bg-${colorBase}-500/10 transition-all text-left group cursor-pointer relative overflow-hidden`}>
+                    <div className={`absolute top-0 right-0 px-4 py-1 bg-${colorBase}-500 text-black text-[8px] font-black uppercase tracking-widest`}>Melhor Valor</div>
+                    <div className="flex justify-between items-center mb-2">
+                       <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Plano Elite 60</span>
+                       <span className={`text-xl font-black text-${colorBase}-500 tracking-tighter italic`}>R$ 20</span>
+                    </div>
+                    <p className="text-white font-black text-sm uppercase">60 Dias de Acesso Total</p>
+                 </div>
+              </div>
+
+              <div className="bg-emerald-500/5 border border-emerald-500/10 p-5 rounded-2xl space-y-3">
+                 <div className="flex items-center gap-2 justify-center">
+                    <i className="fa-solid fa-paper-plane text-emerald-500 text-xs"></i>
+                    <p className="text-[10px] text-emerald-500 font-black uppercase">Como Ativar:</p>
+                 </div>
+                 <p className="text-[9px] text-gray-400 font-bold uppercase leading-relaxed">
+                   Envie o e-mail cadastrado <strong>({user?.email})</strong> para o administrador via Telegram para validar seu pagamento e liberar o acesso.
+                 </p>
+              </div>
+
+              <button onClick={() => setShowPaywall(false)} className="w-full text-[10px] font-black uppercase text-gray-600 hover:text-white transition-colors tracking-widest pt-4">Agora não, obrigado</button>
+           </div>
+        </div>
+      )}
+
       <div className="w-full h-full relative overflow-y-auto no-scrollbar bg-black">
         <div className="relative h-[40vh] md:h-[50vh] w-full">
            <img src={app.banner} alt="" className="w-full h-full object-cover opacity-30" />
@@ -135,17 +208,21 @@ const AppDetails: React.FC<AppDetailsProps> = ({ app, onClose, language, activeC
                  </div>
                  
                  <button 
-                    onClick={handleDownload}
+                    onClick={handleDownloadAttempt}
                     disabled={isDownloading}
                     className={`w-full py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-4 shadow-2xl ${isDownloading ? 'bg-zinc-900 text-gray-600 cursor-wait' : `bg-white text-black hover:scale-105 active:scale-95`}`}
                  >
                     {isDownloading ? (
                       <i className="fa-solid fa-circle-notch animate-spin"></i>
                     ) : (
-                      <i className="fa-solid fa-download"></i>
+                      <i className={`fa-solid ${app.isPremium && !user?.is_premium ? 'fa-lock' : 'fa-download'}`}></i>
                     )}
-                    {isDownloading ? 'Processando...' : 'Baixar Agora'}
+                    {isDownloading ? 'Processando...' : (app.isPremium ? (user?.is_premium ? 'Baixar Agora' : 'Liberar Acesso Premium') : 'Download Direto')}
                  </button>
+
+                 {app.isPremium && !user?.is_premium && (
+                   <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest px-4">Usuários comuns possuem download restrito por segurança.</p>
+                 )}
 
                  <div className="flex flex-col gap-3 w-full opacity-40">
                     <div className="flex justify-between items-center px-4">

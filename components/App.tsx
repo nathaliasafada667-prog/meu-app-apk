@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { ModAppItem, Category, Language, ThemeColor, SystemSettings } from '../types';
+import { ModAppItem, Category, Language, ThemeColor, SystemSettings, UserProfile } from '../types';
 import { translations } from '../translations';
 import { APPS as MOCK_APPS } from '../data';
 import { supabase } from '../lib/supabase';
@@ -9,8 +9,13 @@ import AppCard from './AppCard';
 import AppDetails from './AppDetails';
 import DevProfile from './DevProfile';
 import CineHub from './CineHub';
+import AuthModal from './AuthModal';
+import PublishModal from './PublishModal';
 
 const App: React.FC = () => {
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
+  const [showPublish, setShowPublish] = useState(false);
   const [apps, setApps] = useState<ModAppItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isBooting, setIsBooting] = useState(true);
@@ -39,28 +44,70 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    // 1. Monitorar mudanças de autenticação em tempo real
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Evento Auth:", event);
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      } else {
+        setUserProfile(null);
+      }
+    });
+
+    // 2. Inicialização do App
     const initApp = async () => {
       try {
-        // Check Maintenance
-        const { data: settings } = await supabase.from('system_settings').select('*').eq('id', 1).single();
+        // Tenta recuperar sessão existente imediatamente
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        }
+
+        // Busca configurações de manutenção
+        const { data: settings } = await supabase.from('system_settings').select('*').eq('id', 1).maybeSingle();
         if (settings) setMaintenance(settings);
 
-        // Fetch Apps
-        const { data: dbApps, error } = await supabase.from('apps').select('*');
-        if (error || !dbApps || dbApps.length === 0) {
-          setApps(MOCK_APPS); // Fallback to mocks if DB is empty
-        } else {
-          setApps(dbApps);
-        }
+        // Busca os aplicativos
+        await fetchApps();
       } catch (err) {
+        console.error("Erro na inicialização:", err);
         setApps(MOCK_APPS);
       } finally {
         setLoading(false);
-        setTimeout(() => setIsBooting(false), 1500);
+        // Pequeno delay para a animação de boot ficar elegante
+        setTimeout(() => setIsBooting(false), 1000);
       }
     };
+
     initApp();
+    return () => { authListener.subscription.unsubscribe(); };
   }, []);
+
+  const fetchApps = async () => {
+    const { data: dbApps, error } = await supabase.from('apps').select('*').order('created_at', { ascending: false });
+    if (error || !dbApps || dbApps.length === 0) {
+      setApps(MOCK_APPS);
+    } else {
+      setApps(dbApps);
+    }
+  };
+
+  const fetchProfile = async (userId: string, retry = 0) => {
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+      
+      if (error) throw error;
+
+      if (data) {
+        setUserProfile(data);
+      } else if (retry < 3) {
+        // Se o trigger do Supabase ainda não criou o perfil, tenta de novo em 1.5s
+        setTimeout(() => fetchProfile(userId, retry + 1), 1500);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar perfil:", err);
+    }
+  };
 
   const filteredApps = useMemo(() => {
     return apps.filter(app => {
@@ -71,7 +118,13 @@ const App: React.FC = () => {
     });
   }, [apps, selectedCategory, searchQuery]);
 
-  // Tela de Manutenção (Limpa conforme solicitado)
+  // Handler de Logout para ser usado no CineHub
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUserProfile(null);
+    window.location.reload(); // Recarrega para limpar todos os estados
+  };
+
   if (maintenance?.maintenance_enabled) {
     return (
       <div className="fixed inset-0 bg-black z-[2000] flex flex-col items-center justify-center p-8 text-center animate-fade-in">
@@ -98,7 +151,7 @@ const App: React.FC = () => {
            </div>
         </div>
         <div className="text-center space-y-2">
-           <h2 className="text-[10px] font-black tracking-[0.6em] uppercase text-white/40">Iniciando Rede Modificada</h2>
+           <h2 className="text-[10px] font-black tracking-[0.6em] uppercase text-white/40">Sincronizando Rede Elite</h2>
            <div className="w-48 h-0.5 bg-white/5 rounded-full overflow-hidden">
               <div className={`h-full bg-${colorBase}-500 animate-[progress_2s_ease-in-out_forwards]`}></div>
            </div>
@@ -109,6 +162,9 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen bg-black text-white relative overflow-x-hidden`} onMouseMove={handleMouseMove}>
+      {showAuth && <AuthModal onSuccess={() => setShowAuth(false)} activeColor={themeColors[theme]} />}
+      {showPublish && <PublishModal onClose={() => setShowPublish(false)} onRefresh={fetchApps} activeColor={themeColors[theme]} />}
+      
       {!isEnergySaving && (
         <div 
           className={`fixed w-[80%] h-[80%] bg-${colorBase}-600/5 rounded-full blur-[180px] pointer-events-none transition-all duration-[3s] ease-out aurora-blob`}
@@ -122,13 +178,15 @@ const App: React.FC = () => {
         <header className="mb-24 space-y-6 text-center lg:text-left animate-soft-zoom">
            <div className="flex items-center gap-4 justify-center lg:justify-start">
               <div className={`h-[1px] w-12 bg-gradient-to-r from-${colorBase}-500 to-transparent`}></div>
-              <span className={`text-${colorBase}-500 text-[10px] font-black uppercase tracking-[0.5em]`}>Protocolo Seguro Ativo</span>
+              <span className={`text-${colorBase}-500 text-[10px] font-black uppercase tracking-[0.5em]`}>
+                Membro: {userProfile?.is_premium ? 'PREMIUM' : 'COMUM'}
+              </span>
            </div>
            <h1 className="text-7xl md:text-[11rem] font-black tracking-tighter mb-4 leading-[0.8]">
              APK <span className={`text-transparent bg-clip-text bg-gradient-to-b from-white to-white/5 italic`}>MODS</span>
            </h1>
            <p className="text-gray-500 max-w-2xl mx-auto lg:mx-0 text-lg font-medium opacity-60 uppercase tracking-widest">
-              Explorando o melhor da engenharia reversa para Android.
+              Bem-vindo, {userProfile?.full_name?.split(' ')[0] || (userProfile ? 'Agente' : 'Infiltrado')}.
            </p>
         </header>
 
@@ -162,17 +220,27 @@ const App: React.FC = () => {
         ) : (
           <div className="flex flex-col items-center justify-center py-40 text-center space-y-8 animate-fade-in">
              <i className="fa-solid fa-database text-5xl text-gray-800"></i>
-             <p className="text-gray-600 font-black uppercase tracking-widest text-[10px]">O Banco de Dados de APKs está vazio ou inacessível.</p>
+             <p className="text-gray-600 font-black uppercase tracking-widest text-[10px]">Sem dados na rede.</p>
           </div>
         )}
       </main>
 
-      {selectedApp && <AppDetails app={selectedApp} onClose={() => setSelectedApp(null)} language={lang} activeColor={themeColors[theme]} />}
+      {selectedApp && (
+        <AppDetails 
+          app={selectedApp} onClose={() => setSelectedApp(null)} language={lang} 
+          activeColor={themeColors[theme]} user={userProfile} onRequireAuth={() => setShowAuth(true)} 
+        />
+      )}
       {showDevProfile && <DevProfile onClose={() => setShowDevProfile(false)} language={lang} activeColor={themeColors[theme]} />}
+      
       <CineHub 
         language={lang} setLanguage={setLang} theme={theme} setTheme={setTheme} 
         activeColor={themeColors[theme]} isEnergySaving={isEnergySaving}
         setIsEnergySaving={setIsEnergySaving} onOpenDev={() => setShowDevProfile(true)}
+        user={userProfile}
+        onLogout={handleLogout}
+        onRequireAuth={() => setShowAuth(true)}
+        onOpenPublish={() => setShowPublish(true)}
       />
     </div>
   );
