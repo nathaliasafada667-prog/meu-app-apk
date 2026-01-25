@@ -1,6 +1,8 @@
 
 export interface MovieItem {
   id: string;
+  tmdbId: string; // ID original do TMDB
+  mediaType: 'movie' | 'tv'; // Define se é filme ou série
   title: string;
   category: 'Ação' | 'Terror' | 'Comédia' | 'Ficção' | 'Drama' | 'Série';
   rating: number;
@@ -9,7 +11,7 @@ export interface MovieItem {
   poster: string;
   backdrop: string;
   description: string;
-  actors: string[]; // Alterado de cast para actors
+  actors: string[];
   isPremium: boolean;
   isVerified: boolean;
   director: string;
