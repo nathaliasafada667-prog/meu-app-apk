@@ -1,10 +1,31 @@
 
+export interface ModAppItem {
+  id: string;
+  title: string;
+  packageName: string;
+  version: string;
+  size: string;
+  category: 'Games' | 'Tools' | 'Social' | 'Streaming' | 'Premium' | 'System';
+  rating: number;
+  downloads: string;
+  icon: string;
+  banner: string;
+  description: string;
+  modFeatures: string[];
+  isPremium: boolean;
+  isVerified: boolean;
+  author: string;
+  downloadUrl: string;
+  lastUpdate: string;
+}
+
+// Added MovieItem interface to support CineHub and fix import errors in movieApiService.ts
 export interface MovieItem {
   id: string;
-  tmdbId: string; // ID original do TMDB
-  mediaType: 'movie' | 'tv'; // Define se é filme ou série
+  tmdbId: string;
+  mediaType: 'movie' | 'tv';
   title: string;
-  category: 'Ação' | 'Terror' | 'Comédia' | 'Ficção' | 'Drama' | 'Série';
+  category: Category;
   rating: number;
   year: string;
   duration: string;
@@ -19,76 +40,36 @@ export interface MovieItem {
   downloadUrl: string;
 }
 
-export type Category = 'All' | 'Ação' | 'Terror' | 'Comédia' | 'Ficção' | 'Drama' | 'Série';
+export interface SystemSettings {
+  maintenance_enabled: boolean;
+  maintenance_message: string;
+}
+
+// Expanded Category to include Movie genres and "Série" to fix comparison and assignment errors in movieApiService.ts
+export type Category = 'All' | 'Games' | 'Tools' | 'Social' | 'Streaming' | 'Premium' | 'Ação' | 'Terror' | 'Comédia' | 'Ficção' | 'Drama' | 'Série';
 export type Language = 'pt' | 'en' | 'es' | 'ru' | 'fr' | 'it' | 'ko' | 'ja';
 export type ThemeColor = 'blue' | 'emerald' | 'rose' | 'amber' | 'purple' | 'cyan' | 'red' | 'orange' | 'lime' | 'fuchsia';
-export type SortOption = 'default' | 'rating' | 'name' | 'year';
 
 export interface TranslationSchema {
   heroTitle: string;
   heroDesc: string;
   searchPlaceholder: string;
-  devLabel: string;
   systemOnline: string;
-  latency: string;
-  uptime: string;
   tickerMsgs: string[];
   categoryAll: string;
-  categoryAction: string;
-  categoryHorror: string;
-  categoryComedy: string;
-  categorySciFi: string;
-  categoryDrama: string;
-  categorySeries: string;
+  categoryGames: string;
+  categoryTools: string;
+  categorySocial: string;
+  categoryStreaming: string;
+  categoryPremium: string;
   noResults: string;
-  sortBy: string;
-  sortName: string;
-  sortRating: string;
-  sortYear: string;
-  recent: string;
-  favorites: string;
-  tryAgain: string;
-  verifiedOfficial: string;
-  qualityCertified: string;
-  systemLibrary: string;
-  exploringDatabase: string;
-  waitingProjects: string;
-  supabaseError: string;
-  aboutMovie: string;
   downloadBtn: string;
-  watchBtn: string;
-  generatingLink: string;
-  redirecting: string;
-  movieEdition: string;
-  directorLabel: string;
-  yearLabel: string;
-  durationLabel: string;
-  ratingLabel: string;
-  optimizedText: string;
-  verifiedBy: string;
-  secureProtocol: string;
+  maintenanceTitle: string;
+  backSoon: string;
+  // Added missing translation fields required by AppDetails and DevProfile components
   scanSteps: string[];
-  reverseEngineering: string;
   devSpecialist: string;
-  age: string;
-  level: string;
-  devDesc: string;
   aboutSystem: string;
-  connect: string;
-  message: string;
+  devDesc: string;
   telegram: string;
-  aiChatTitle: string;
-  aiChatPlaceholder: string;
-  aiWelcome: string;
-  aiMaintenance: string;
-  aiError: string;
-  aiLoading: string;
-  aiAnalysis: string;
-  experimentalTip: string;
-  mainFeatures: string;
-  amoledOptimization: string;
-  auroraOn: string;
-  amoledOn: string;
-  visualAtmosphere: string;
-  languageSelect: string;
 }
