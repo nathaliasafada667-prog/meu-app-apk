@@ -19,7 +19,13 @@ export interface ModAppItem {
   lastUpdate: string;
 }
 
-// Added MovieItem interface to support CineHub and fix import errors in movieApiService.ts
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  is_premium: boolean;
+}
+
 export interface MovieItem {
   id: string;
   tmdbId: string;
@@ -45,7 +51,6 @@ export interface SystemSettings {
   maintenance_message: string;
 }
 
-// Expanded Category to include Movie genres and "Série" to fix comparison and assignment errors in movieApiService.ts
 export type Category = 'All' | 'Games' | 'Tools' | 'Social' | 'Streaming' | 'Premium' | 'Ação' | 'Terror' | 'Comédia' | 'Ficção' | 'Drama' | 'Série';
 export type Language = 'pt' | 'en' | 'es' | 'ru' | 'fr' | 'it' | 'ko' | 'ja';
 export type ThemeColor = 'blue' | 'emerald' | 'rose' | 'amber' | 'purple' | 'cyan' | 'red' | 'orange' | 'lime' | 'fuchsia';
@@ -66,7 +71,6 @@ export interface TranslationSchema {
   downloadBtn: string;
   maintenanceTitle: string;
   backSoon: string;
-  // Added missing translation fields required by AppDetails and DevProfile components
   scanSteps: string[];
   devSpecialist: string;
   aboutSystem: string;
