@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { MovieItem } from '../types';
+import { ModAppItem } from '../types';
 
 interface AppCardProps {
-  app: MovieItem;
+  app: ModAppItem;
   onClick: () => void;
   activeColor: string;
   isFavorite: boolean;
@@ -21,70 +21,59 @@ const AppCard: React.FC<AppCardProps> = ({ app, onClick, activeColor, isFavorite
   return (
     <div 
       onClick={onClick}
-      className={`glass glass-hover p-2 rounded-[1.5rem] cursor-pointer group border-transparent hover:border-${colorName}-500/30 transition-all relative overflow-hidden flex flex-col items-center text-center`}
+      className={`glass glass-hover p-4 rounded-[2.5rem] cursor-pointer group border-transparent hover:border-${colorName}-500/30 transition-all relative overflow-hidden flex flex-col bg-black/40`}
     >
-      <div className="relative mb-3 w-full">
-        {/* Poster Proporção 2:3 */}
-        <div className="relative overflow-hidden rounded-xl shadow-xl group-hover:shadow-${colorName}-500/10 transition-all aspect-[2/3]">
+      <div className="flex items-start gap-5 mb-5">
+        {/* App Icon */}
+        <div className="relative w-24 h-24 flex-shrink-0">
+          <div className={`absolute inset-0 bg-${colorName}-500/10 blur-xl rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity`}></div>
           <img 
-            src={app.poster} 
+            src={app.icon} 
             alt={app.title} 
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            className="w-full h-full object-cover rounded-[1.8rem] relative z-10 border border-white/5 shadow-2xl transition-transform duration-500 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          
-          {/* Badge Watch Now Hover */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0">
-             <div className={`w-12 h-12 bg-${colorName}-500 rounded-full flex items-center justify-center shadow-2xl shadow-${colorName}-500/50`}>
-                <i className="fa-solid fa-play text-white ml-1"></i>
-             </div>
-          </div>
         </div>
-        
-        <button 
-          onClick={handleFavClick}
-          className={`absolute top-2 left-2 w-7 h-7 flex items-center justify-center glass rounded-lg backdrop-blur-xl transition-all active:scale-90 ${isFavorite ? 'text-rose-500' : 'text-white/60 hover:text-white'}`}
-        >
-          <i className={`fa-${isFavorite ? 'solid' : 'regular'} fa-heart text-[10px]`}></i>
-        </button>
 
-        <div className="absolute top-2 right-2 flex flex-col gap-1.5 items-end">
-          {app.isPremium && (
-            <div className={`bg-${colorName}-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter shadow-lg shadow-black/40`}>
-              4K HDR
-            </div>
-          )}
+        <div className="flex-1 min-w-0 pt-2">
+          <div className="flex items-center gap-2 mb-1">
+             <span className={`text-[8px] font-black uppercase tracking-widest text-${colorName}-400 bg-${colorName}-500/5 px-2 py-0.5 rounded-md border border-${colorName}-500/10`}>
+                {app.category}
+             </span>
+             {app.isVerified && <i className="fa-solid fa-circle-check text-blue-500 text-[10px]"></i>}
+          </div>
+          <h3 className="font-black text-xl text-white truncate group-hover:text-white transition-colors tracking-tighter">
+            {app.title}
+          </h3>
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">{app.version}</p>
         </div>
       </div>
       
-      <div className="w-full space-y-1">
-        <div className="flex items-center justify-center gap-1 mb-0.5">
-           <span className="text-[7px] font-black text-gray-500 uppercase tracking-widest">
-              {app.year}
-           </span>
-           {app.isVerified && <i className="fa-solid fa-circle-check text-blue-500 text-[8px]"></i>}
-        </div>
-        
-        <h3 className={`font-black text-sm truncate group-hover:text-${colorName}-400 transition-colors px-1 tracking-tight`}>
-          {app.title}
-        </h3>
-        
-        <div className="flex items-center justify-center gap-2">
-          <div className="flex items-center gap-0.5 text-yellow-400 text-[9px] font-bold">
-            <i className="fa-solid fa-star"></i>
-            <span>{app.rating}</span>
-          </div>
-          <div className="w-[1px] h-2 bg-white/10"></div>
-          <span className="text-[9px] text-gray-500 font-bold uppercase tracking-tight">
-            {app.duration}
-          </span>
-        </div>
-        
-        <div className="pt-1">
-          <span className={`text-[7px] text-${colorName}-400 font-black bg-${colorName}-500/5 px-2 py-0.5 rounded-md uppercase border border-${colorName}-500/10 inline-block`}>
-            {app.category}
-          </span>
-        </div>
+      <div className="w-full grid grid-cols-3 gap-2 mb-4">
+         <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-2 text-center">
+            <p className="text-[7px] text-gray-600 font-black uppercase">Tamanho</p>
+            <p className="text-[10px] text-white font-black">{app.size}</p>
+         </div>
+         <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-2 text-center">
+            <p className="text-[7px] text-gray-600 font-black uppercase">Rating</p>
+            <p className="text-[10px] text-yellow-500 font-black">{app.rating}★</p>
+         </div>
+         <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-2 text-center">
+            <p className="text-[7px] text-gray-600 font-black uppercase">Downloads</p>
+            <p className="text-[10px] text-emerald-500 font-black">{app.downloads}</p>
+         </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 mt-auto">
+         <div className="flex -space-x-2">
+            {app.modFeatures.slice(0, 2).map((feat, i) => (
+              <div key={i} className={`w-6 h-6 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center`} title={feat}>
+                <i className={`fa-solid ${i === 0 ? 'fa-shield' : 'fa-bolt'} text-[8px] text-${colorName}-400`}></i>
+              </div>
+            ))}
+         </div>
+         <button onClick={handleFavClick} className={`w-10 h-10 flex items-center justify-center glass rounded-xl transition-all active:scale-90 ${isFavorite ? 'text-rose-500' : 'text-white/20'}`}>
+            <i className={`fa-${isFavorite ? 'solid' : 'regular'} fa-heart text-xs`}></i>
+         </button>
       </div>
     </div>
   );

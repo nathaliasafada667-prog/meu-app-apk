@@ -1,32 +1,19 @@
 
 import React, { useEffect, useState } from 'react';
-import { MovieItem, Language } from '../types';
+import { ModAppItem, Language } from '../types';
 import { translations } from '../translations';
 
 interface AppDetailsProps {
-  app: MovieItem;
+  app: ModAppItem;
   onClose: () => void;
   language: Language;
   activeColor: string;
 }
 
-/** 
- * SERVIDORES OTIMIZADOS
- * Delta Fast e Brasil VIP configurados para máxima compatibilidade.
- */
-const SERVERS = [
-  { id: 'autoembed', name: 'Delta Fast', desc: 'Player Rápido (Mais Estável)', url: (id: string, type: string) => `https://player.autoembed.cc/embed/${type}/${id}` },
-  { id: 'warez_br', name: 'Brasil VIP', desc: 'Conteúdo Dublado BR', url: (id: string, type: string) => `https://embed.warezcdn.net/${type === 'movie' ? 'filme' : 'serie'}/${id}` },
-  { id: 'vidsrc_to', name: 'Alpha HD', desc: '4K / Multi-legenda', url: (id: string, type: string) => `https://vidsrc.to/embed/${type}/${id}` },
-  { id: 'vidsrc_me', name: 'Beta Multi', desc: 'Global Server', url: (id: string, type: string) => `https://vidsrc.me/embed/${type}?tmdb=${id}` },
-  { id: 'embed_su', name: 'Gamma Pro', desc: 'Ultra Estabilidade', url: (id: string, type: string) => `https://embed.su/embed/${type}/${id}` }
-];
-
 const AppDetails: React.FC<AppDetailsProps> = ({ app, onClose, language, activeColor }) => {
   const [isScanning, setIsScanning] = useState(true);
   const [scanStep, setScanStep] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [selectedServer, setSelectedServer] = useState(0); 
+  const [isDownloading, setIsDownloading] = useState(false);
   
   const t = translations[language] || translations['pt'];
   const colorBase = activeColor.split('-')[0];
@@ -39,145 +26,139 @@ const AppDetails: React.FC<AppDetailsProps> = ({ app, onClose, language, activeC
       step++;
       if (step >= t.scanSteps.length) {
         clearInterval(scanInterval);
-        setTimeout(() => setIsScanning(false), 400);
+        setTimeout(() => setIsScanning(false), 500);
       }
-    }, 250);
+    }, 300);
     return () => {
       document.body.style.overflow = 'unset';
       clearInterval(scanInterval);
     };
   }, [t.scanSteps.length]);
 
-  const handleWatch = () => {
-    setIsPlaying(true);
+  const handleDownload = () => {
+    setIsDownloading(true);
+    setTimeout(() => {
+      setIsDownloading(false);
+      alert('Iniciando transferência segura...');
+    }, 2000);
   };
-
-  const currentVideoUrl = SERVERS[selectedServer].url(app.tmdbId, app.mediaType);
 
   if (isScanning) {
     return (
       <div className="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-black">
-        <div className={`w-24 h-24 mb-10 relative flex items-center justify-center`}>
-           <div className={`absolute inset-0 border-2 border-${colorBase}-500/10 rounded-2xl`}></div>
-           <div className={`absolute inset-0 border-2 border-t-${colorBase}-500 rounded-2xl animate-spin`}></div>
-           <i className="fa-solid fa-bolt-lightning text-2xl text-white animate-pulse"></i>
+        <div className="relative w-48 h-48 flex items-center justify-center mb-10">
+           <div className={`absolute inset-0 border-2 border-${colorBase}-500/10 rounded-[3rem]`}></div>
+           <div className={`absolute inset-0 border-2 border-t-${colorBase}-500 rounded-[3rem] animate-spin`}></div>
+           <div className="flex flex-col items-center animate-pulse">
+              <i className={`fa-solid fa-dna text-3xl text-white mb-2`}></i>
+              <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Analisando APK</span>
+           </div>
         </div>
-        <p className={`text-[9px] font-black uppercase tracking-[0.5em] text-${colorBase}-400 animate-pulse`}>{t.scanSteps[scanStep]}</p>
+        <p className={`text-[10px] font-black uppercase tracking-[0.6em] text-${colorBase}-400 animate-pulse`}>{t.scanSteps[scanStep]}</p>
       </div>
     );
   }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black animate-fade-in">
-      <div className={`w-full h-full relative overflow-hidden flex flex-col bg-black`}>
-        {isPlaying ? (
-          <div className="w-full h-full bg-black relative flex flex-col animate-fade-in">
-            {/* Header do Player AMOLED */}
-            <div className="p-4 md:p-5 flex flex-col md:flex-row gap-4 justify-between items-center z-20 glass border-b border-white/5 bg-black/95">
-               <button onClick={() => setIsPlaying(false)} className="w-full md:w-auto px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-3 transition-all border border-white/5">
-                  <i className="fa-solid fa-chevron-left"></i> Voltar ao Catálogo
-               </button>
-               
-               <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:max-w-3xl px-1">
-                  {SERVERS.map((srv, idx) => (
-                    <button 
-                      key={srv.id}
-                      onClick={() => setSelectedServer(idx)}
-                      className={`px-5 py-2.5 rounded-xl text-[8px] font-black uppercase border transition-all whitespace-nowrap flex flex-col items-center justify-center min-w-[120px] ${selectedServer === idx ? `bg-${colorBase}-500 border-${colorBase}-500 text-white shadow-lg` : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'}`}
-                    >
-                      <span>{srv.name}</span>
-                      <span className="text-[6px] opacity-40 font-bold lowercase tracking-normal">{srv.desc}</span>
-                    </button>
-                  ))}
-               </div>
-            </div>
-            
-            {/* Area do Video */}
-            <div className="flex-1 w-full bg-black flex flex-col items-center justify-center overflow-hidden relative">
-                <iframe 
-                   key={currentVideoUrl}
-                   src={currentVideoUrl} 
-                   className="w-full h-full border-0" 
-                   // Adicionadas permissões vitais para o funcionamento do Delta Fast e outros players
-                   allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; display-capture" 
-                   allowFullScreen
-                   referrerPolicy="no-referrer"
-                ></iframe>
-                
-                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center -z-10 bg-black">
-                   <div className={`w-12 h-12 border-2 border-${colorBase}-500/10 border-t-${colorBase}-500 rounded-full animate-spin mb-4`}></div>
-                   <p className="text-[7px] font-black uppercase tracking-[0.4em] text-white/20">Estabelecendo Link Seguro...</p>
-                </div>
-            </div>
+      <div className="w-full h-full relative overflow-y-auto no-scrollbar bg-black">
+        <div className="relative h-[40vh] md:h-[50vh] w-full">
+           <img src={app.banner} alt="" className="w-full h-full object-cover opacity-30" />
+           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
+           
+           <div className="absolute top-6 right-6 z-20">
+              <button onClick={onClose} className="w-14 h-14 glass rounded-2xl flex items-center justify-center text-white hover:bg-white/10 active:scale-90 transition-all border-white/10"><i className="fa-solid fa-xmark text-xl"></i></button>
+           </div>
 
-            <div className="p-3 bg-black border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-3">
-                <div className="flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]"></div>
-                   <p className="text-[7px] font-black uppercase tracking-[0.3em] text-gray-500">Fluxo de Dados: 1080p Ultra HD</p>
-                </div>
-                <p className="text-[6px] font-black uppercase text-gray-800 tracking-widest italic">Pressione o Play do servidor para iniciar</p>
-            </div>
-          </div>
-        ) : (
-          <div className="h-full overflow-y-auto no-scrollbar pb-32">
-            <div className="relative h-[60vh] md:h-[70vh] w-full">
-               <img src={app.backdrop} alt="" className="w-full h-full object-cover opacity-30 scale-105" />
-               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
-               <div className="absolute inset-0 bg-gradient-to-r from-black via-black/20 to-transparent"></div>
-               
-               <div className="absolute top-6 right-6 z-20">
-                  <button onClick={onClose} className="w-14 h-14 glass rounded-2xl flex items-center justify-center text-white hover:bg-white/10 transition-all border-white/10 active:scale-90"><i className="fa-solid fa-xmark text-lg"></i></button>
-               </div>
+           <div className="absolute bottom-10 left-6 md:left-20 flex flex-col md:flex-row items-end gap-8 animate-soft-zoom">
+              <img src={app.icon} className="w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] shadow-2xl border-4 border-black" />
+              <div className="space-y-4 pb-2">
+                 <div className="flex items-center gap-3">
+                    <span className={`px-4 py-1.5 bg-${colorBase}-600 text-white text-[9px] font-black rounded-lg uppercase tracking-widest shadow-xl`}>{app.category}</span>
+                    <span className="text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 px-3 py-1 rounded-lg bg-emerald-500/5 flex items-center gap-2">
+                       <i className="fa-solid fa-shield-check"></i> Verificado
+                    </span>
+                 </div>
+                 <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-white uppercase italic leading-none">{app.title}</h2>
+                 <p className="text-gray-500 text-xs md:text-sm font-black uppercase tracking-widest">{app.packageName} • v{app.version}</p>
+              </div>
+           </div>
+        </div>
 
-               <div className="absolute bottom-10 left-6 md:left-20 max-w-5xl space-y-6 md:space-y-8 animate-soft-zoom">
-                  <div className="flex items-center gap-4">
-                     <span className={`px-4 py-1.5 bg-${colorBase}-600 text-white text-[8px] font-black rounded-lg uppercase tracking-widest shadow-xl`}>{app.category}</span>
-                     <div className="flex items-center gap-2 text-yellow-500 font-black text-xs">
-                        <i className="fa-solid fa-star"></i>
-                        <span>{app.rating}</span>
-                     </div>
-                     <span className="text-white/40 text-[9px] font-black uppercase tracking-widest border-l border-white/10 pl-4">{app.year} • {app.duration}</span>
-                  </div>
-                  <h2 className="text-4xl md:text-8xl font-black tracking-tighter text-white leading-[0.85] uppercase italic">{app.title}</h2>
-                  <div className="flex flex-wrap items-center gap-6">
-                     <button onClick={handleWatch} className={`group px-12 py-6 bg-white text-black rounded-2xl font-black text-xs uppercase transition-all hover:scale-105 active:scale-95 flex items-center gap-4 shadow-[0_20px_40px_rgba(255,255,255,0.1)]`}>
-                        <i className="fa-solid fa-play"></i>
-                        Assistir Agora
-                     </button>
-                     <div className="flex items-center gap-3 px-5 py-3 glass rounded-xl border-white/5">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <span className="text-[8px] font-black uppercase text-emerald-500 tracking-widest">Servidores VIP Liberados</span>
-                     </div>
-                  </div>
-               </div>
-            </div>
+        <div className="px-6 md:px-20 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+           <div className="lg:col-span-8 space-y-12">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                 {[
+                   { label: 'Tamanho', val: app.size, icon: 'fa-box' },
+                   { label: 'Downloads', val: app.downloads, icon: 'fa-download' },
+                   { label: 'Autor', val: app.author, icon: 'fa-user-ninja' },
+                   { label: 'Update', val: app.lastUpdate, icon: 'fa-clock' }
+                 ].map((stat, i) => (
+                   <div key={i} className="glass p-5 rounded-[2rem] border-white/5 flex flex-col items-center text-center group">
+                      <i className={`fa-solid ${stat.icon} mb-3 text-${colorBase}-500 opacity-40 group-hover:opacity-100 transition-opacity`}></i>
+                      <p className="text-[8px] font-black text-gray-600 uppercase mb-1 tracking-widest">{stat.label}</p>
+                      <p className="text-white text-sm font-black tracking-tight">{stat.val}</p>
+                   </div>
+                 ))}
+              </div>
 
-            <div className="px-6 md:px-20 py-12 md:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10">
-               <div className="lg:col-span-8 space-y-10">
-                  <div className="space-y-6">
-                     <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">Sinopse Oficial</h4>
-                     <p className="text-gray-400 text-lg md:text-2xl leading-relaxed font-medium tracking-tight">
-                        {app.description}
-                     </p>
-                  </div>
-               </div>
+              <div className="space-y-6">
+                 <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">Recursos do Mod</h4>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {app.modFeatures.map((feat, i) => (
+                      <div key={i} className="flex items-center gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-2xl group">
+                         <div className={`w-8 h-8 rounded-lg bg-${colorBase}-500/10 flex items-center justify-center text-${colorBase}-500 text-xs`}>
+                            <i className="fa-solid fa-bolt"></i>
+                         </div>
+                         <span className="text-sm font-black text-gray-300 group-hover:text-white transition-colors">{feat}</span>
+                      </div>
+                    ))}
+                 </div>
+              </div>
 
-               <div className="lg:col-span-4">
-                  <div className="glass p-8 rounded-[2.5rem] border-white/5 space-y-6 bg-white/[0.01]">
-                     <h5 className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Painel de Sinal</h5>
-                     <div className="space-y-4">
-                        {SERVERS.slice(0, 4).map(s => (
-                           <div key={s.id} className="flex items-center justify-between border-b border-white/5 pb-3">
-                              <span className="text-[9px] font-black uppercase text-gray-400">{s.name}</span>
-                              <span className="text-[8px] font-black text-emerald-500">DISPONÍVEL</span>
-                           </div>
-                        ))}
-                     </div>
-                  </div>
-               </div>
-            </div>
-          </div>
-        )}
+              <div className="space-y-6">
+                 <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">Sobre o App</h4>
+                 <p className="text-gray-400 text-xl md:text-3xl leading-relaxed font-medium tracking-tight">
+                    {app.description}
+                 </p>
+              </div>
+           </div>
+
+           <div className="lg:col-span-4 space-y-8">
+              <div className={`glass p-10 rounded-[3.5rem] border-white/5 bg-gradient-to-b from-${colorBase}-500/5 to-transparent flex flex-col items-center text-center space-y-8`}>
+                 <div className="w-20 h-20 glass rounded-3xl flex items-center justify-center shadow-2xl">
+                    <i className={`fa-solid fa-cloud-arrow-down text-3xl text-${colorBase}-500 animate-bounce`}></i>
+                 </div>
+                 <div className="space-y-2">
+                    <h5 className="text-xl font-black text-white tracking-tighter uppercase">Transferência Segura</h5>
+                    <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Protocolo EsmaelX v4.0 Ativo</p>
+                 </div>
+                 
+                 <button 
+                    onClick={handleDownload}
+                    disabled={isDownloading}
+                    className={`w-full py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-4 shadow-2xl ${isDownloading ? 'bg-zinc-900 text-gray-600 cursor-wait' : `bg-white text-black hover:scale-105 active:scale-95`}`}
+                 >
+                    {isDownloading ? (
+                      <i className="fa-solid fa-circle-notch animate-spin"></i>
+                    ) : (
+                      <i className="fa-solid fa-download"></i>
+                    )}
+                    {isDownloading ? 'Processando...' : 'Baixar Agora'}
+                 </button>
+
+                 <div className="flex flex-col gap-3 w-full opacity-40">
+                    <div className="flex justify-between items-center px-4">
+                       <span className="text-[8px] font-black uppercase text-gray-500">Node Status</span>
+                       <span className="text-[8px] font-black uppercase text-emerald-500">Live</span>
+                    </div>
+                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                       <div className={`h-full bg-${colorBase}-500 w-[70%]`}></div>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </div>
       </div>
     </div>
   );
