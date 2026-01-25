@@ -1,4 +1,5 @@
 
+// Fixed: Imported MovieItem and updated Category are now available in ../types
 import { MovieItem, Category } from '../types';
 
 const DEFAULT_TMDB_KEY = 'b973cc20efe73b51c50dd198d64630d8'; 
@@ -9,6 +10,7 @@ function getApiKey() {
   return localStorage.getItem('esmael_tmdb_key') || DEFAULT_TMDB_KEY;
 }
 
+// Fixed: Correctly typed GENRE_MAP to use literals from the expanded Category union type in types.ts
 const GENRE_MAP: Record<number, Category> = {
   28: 'Ação',
   27: 'Terror',
@@ -44,9 +46,11 @@ export async function fetchByCategory(category: Category, page: number = 1): Pro
   if (category === 'All') return fetchTrendingMovies(page);
   
   const genreId = Object.keys(GENRE_MAP).find(key => GENRE_MAP[Number(key)] === category);
+  // Fixed: Validated comparison after adding 'Série' to the Category type in types.ts
   const type = category === 'Série' ? 'tv' : 'movie';
   
   try {
+    // Fixed: Properly handles the 'Série' category for API endpoints
     const endpoint = category === 'Série' ? `${BASE_URL}/tv/popular` : `${BASE_URL}/discover/movie`;
     const genreParam = category === 'Série' ? '' : `&with_genres=${genreId}`;
     
@@ -61,14 +65,15 @@ export async function fetchByCategory(category: Category, page: number = 1): Pro
 function mapToMovieItem(item: any): MovieItem {
   const genreId = item.genre_ids?.[0];
   const isTV = item.media_type === 'tv' || !item.title;
-  const category = isTV ? 'Série' : (GENRE_MAP[genreId] || 'Ficção');
+  // Fixed: Assigned category correctly using values from the unified Category type defined in types.ts
+  const category: Category = isTV ? 'Série' : (GENRE_MAP[genreId] || 'Ficção');
 
   return {
     id: `tmdb-${item.id}`,
     tmdbId: String(item.id),
     mediaType: isTV ? 'tv' : 'movie',
     title: item.title || item.name || 'Título Indisponível',
-    category: category as any,
+    category: category,
     rating: Number(item.vote_average?.toFixed(1) || 0),
     year: (item.release_date || item.first_air_date || '2024').split('-')[0],
     duration: isTV ? 'Série' : '115 min',
