@@ -16,7 +16,14 @@ jobs:
         with:
           node-version: 20
 
-      - name: Instalar dependências
+      # 🔥 CORREÇÃO DO ERRO DO JAVA AQUI
+      - name: Instalar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Instalar dependências do projeto
         run: npm install
 
       - name: Build do site (Vite)
@@ -32,10 +39,10 @@ jobs:
       - name: Dar permissão ao Gradle
         run: chmod +x android/gradlew
 
-      - name: Gerar APK (debug)
+      - name: Gerar APK (Debug)
         run: cd android && ./gradlew assembleDebug
 
-      - name: Enviar APK
+      - name: Enviar APK gerado
         uses: actions/upload-artifact@v4
         with:
           name: elite-store-apk
