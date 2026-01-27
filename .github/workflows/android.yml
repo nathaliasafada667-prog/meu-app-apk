@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Baixar código
+      - name: Checkout código
         uses: actions/checkout@v4
 
       - name: Instalar Node
@@ -22,21 +22,21 @@ jobs:
       - name: Build do site (Vite)
         run: npm run build
 
-      - name: Instalar Capacitor
-        run: npm install @capacitor/core @capacitor/cli @capacitor/android
-
-      - name: Configurar Capacitor
+      - name: Instalar Capacitor e Android
         run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap init "Elite Store" "com.elite.store" --web-dir=dist || true
+          npx cap add android || true
           npx cap sync android
 
       - name: Dar permissão ao Gradle
         run: chmod +x android/gradlew
 
-      - name: Gerar APK
+      - name: Gerar APK (debug)
         run: cd android && ./gradlew assembleDebug
 
       - name: Enviar APK
         uses: actions/upload-artifact@v4
         with:
-          name: esmael-store-apk
+          name: elite-store-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
