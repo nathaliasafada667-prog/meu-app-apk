@@ -87,7 +87,9 @@ export interface TranslationSchema {
   
   // CineHub / Settings Menu
   accessTab: string;
+  collectionTab: string;
   settingsTab: string;
+  noFavorites: string;
   agentPanel: string;
   usernameLabel: string;
   activeCodeLabel: string;
