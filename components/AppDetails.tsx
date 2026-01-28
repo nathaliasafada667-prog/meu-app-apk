@@ -22,12 +22,12 @@ const AppDetails: React.FC<AppDetailsProps> = ({
   const [isScanning, setIsScanning] = useState(true);
   const [scanStep, setScanStep] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showVerifyInfo, setShowVerifyInfo] = useState(false);
   
   const t = translations[language] || translations['pt'];
   const colorBase = activeColor.split('-')[0];
-  const telegramLink = "https://t.me/all_uk_mods";
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -45,6 +45,26 @@ const AppDetails: React.FC<AppDetailsProps> = ({
       clearInterval(scanInterval);
     };
   }, [t.scanSteps.length]);
+
+  // Efeito para simular o progresso do download
+  useEffect(() => {
+    let interval: any;
+    if (isDownloading) {
+      setDownloadProgress(0);
+      interval = setInterval(() => {
+        setDownloadProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + 2;
+        });
+      }, 30);
+    } else {
+      setDownloadProgress(0);
+    }
+    return () => clearInterval(interval);
+  }, [isDownloading]);
 
   const handleDownloadAttempt = () => {
     if (!app.isPremium) {
@@ -67,13 +87,16 @@ const AppDetails: React.FC<AppDetailsProps> = ({
     setTimeout(() => {
       setIsDownloading(false);
       window.open(app.downloadUrl, '_blank');
-    }, 2000);
+    }, 2200);
   };
 
   const renderDownloadButton = () => {
     if (isDownloading) {
       return (
-        <><i className="fa-solid fa-circle-notch animate-spin"></i><span>PROCESSANDO...</span></>
+        <span className="relative z-10 flex items-center gap-2">
+          <i className={`fa-solid ${downloadProgress === 100 ? 'fa-check' : 'fa-circle-notch animate-spin'}`}></i>
+          <span>{downloadProgress === 100 ? 'CONCLUÍDO' : 'PROCESSANDO...'}</span>
+        </span>
       );
     }
     if (!app.isPremium) {
@@ -111,6 +134,11 @@ const AppDetails: React.FC<AppDetailsProps> = ({
       </div>
     );
   }
+
+  // Cálculos para o SVG Circular
+  const radius = 90;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (downloadProgress / 100) * circumference;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black animate-fade-in overflow-hidden">
@@ -187,7 +215,7 @@ const AppDetails: React.FC<AppDetailsProps> = ({
                  ))}
               </div>
 
-              {/* Mod Features (A LISTA QUE VOCÊ QUERIA, MEU AMOR) */}
+              {/* Mod Features */}
               <div className="space-y-6">
                  <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">MOD FEATURES ELITE</h4>
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -213,11 +241,39 @@ const AppDetails: React.FC<AppDetailsProps> = ({
 
            {/* Sidebar Download */}
            <div className="lg:col-span-4 h-fit lg:sticky lg:top-10">
-              <div className="glass p-8 rounded-[3rem] border-white/5 flex flex-col items-center text-center space-y-8 bg-gradient-to-b from-white/[0.02] to-transparent">
-                 <div className="w-20 h-20 glass rounded-3xl flex items-center justify-center relative">
-                    <i className={`fa-solid fa-cloud-arrow-down text-3xl text-${colorBase}-500 animate-bounce`}></i>
+              <div className="glass p-8 rounded-[3rem] border-white/5 flex flex-col items-center text-center space-y-8 bg-gradient-to-b from-white/[0.02] to-transparent relative overflow-hidden">
+                 
+                 {/* Progress Ring Overlay */}
+                 {isDownloading && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                       <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 200 200">
+                          <circle
+                            cx="100" cy="100" r={radius}
+                            fill="transparent"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            className="text-white/5"
+                          />
+                          <circle
+                            cx="100" cy="100" r={radius}
+                            fill="transparent"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={strokeDashoffset}
+                            strokeLinecap="round"
+                            className={`text-${colorBase}-500 transition-all duration-300 ease-out`}
+                            style={{ filter: `drop-shadow(0 0 8px currentColor)` }}
+                          />
+                       </svg>
+                    </div>
+                 )}
+
+                 <div className="w-20 h-20 glass rounded-3xl flex items-center justify-center relative z-10">
+                    <i className={`fa-solid fa-cloud-arrow-down text-3xl text-${colorBase}-500 ${isDownloading ? 'animate-pulse' : 'animate-bounce'}`}></i>
                  </div>
-                 <div className="space-y-1">
+                 
+                 <div className="space-y-1 relative z-10">
                     <h5 className="text-xl font-black text-white uppercase italic tracking-tighter">TRANSFERÊNCIA SEGURA</h5>
                     <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Protocolo v11.4</p>
                  </div>
@@ -225,11 +281,14 @@ const AppDetails: React.FC<AppDetailsProps> = ({
                  <button 
                     onClick={handleDownloadAttempt}
                     disabled={isDownloading}
-                    className={`w-full py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 transition-all ${isDownloading ? 'bg-zinc-900 text-gray-600' : 'bg-white text-black hover:scale-105 active:scale-95 shadow-2xl shadow-white/5'}`}
+                    className={`w-full py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 transition-all relative overflow-hidden ${isDownloading ? 'bg-transparent text-white border border-white/10' : 'bg-white text-black hover:scale-105 active:scale-95 shadow-2xl shadow-white/5'}`}
                  >
                     {renderDownloadButton()}
                  </button>
-                 <p className="text-[7px] font-black text-gray-800 uppercase tracking-widest">Verificado e Assinado por EsmaelX</p>
+                 
+                 <div className="relative z-10">
+                   <p className="text-[7px] font-black text-gray-800 uppercase tracking-widest">Verificado e Assinado por EsmaelX</p>
+                 </div>
               </div>
            </div>
         </div>

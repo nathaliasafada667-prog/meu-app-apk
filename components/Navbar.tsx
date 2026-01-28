@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Language } from '../types';
 import { translations } from '../translations';
@@ -22,30 +23,25 @@ const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[60] glass border-b border-white/5 backdrop-blur-3xl pt-8 pb-6 md:pt-10 md:pb-8">
-      <div className="container mx-auto px-6 flex flex-col items-center gap-6">
+    <nav className="fixed top-0 left-0 right-0 z-[60] glass border-b border-white/5 backdrop-blur-3xl pt-6 pb-4 md:pt-8 md:pb-6">
+      <div className="container mx-auto px-6 flex flex-col items-center gap-4">
         
-        {/* TÍTULO MOVIDO PARA CIMA DA BUSCA */}
-        <div className="flex flex-col items-center text-center space-y-1 mb-2">
-           <div className="flex items-center gap-3 mb-1">
-              <div className={`h-[1px] w-8 bg-gradient-to-r from-transparent to-${colorBase}-500`}></div>
-              <span className={`text-${colorBase}-500 text-[10px] font-black uppercase tracking-[0.5em] italic`}>Protocolo Elite</span>
-              <div className={`h-[1px] w-8 bg-gradient-to-l from-transparent to-${colorBase}-500`}></div>
-           </div>
+        {/* TÍTULO CENTRALIZADO */}
+        <div className="flex flex-col items-center text-center space-y-1 mb-1">
            <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-white uppercase italic leading-none">
              {t.heroTitle.split(' ')[0]} <span className={`text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20`}>{t.heroTitle.split(' ').slice(1).join(' ')}</span>
            </h1>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-center justify-between w-full gap-6">
-          {/* LOGO SIMPLIFICADO NO CANTO */}
+        <div className="flex flex-col lg:flex-row items-center justify-between w-full gap-4">
+          {/* LOGO SIMPLIFICADO */}
           <div className="hidden lg:flex items-center gap-3 cursor-pointer group" onClick={() => window.location.reload()}>
             <div className={`w-10 h-10 bg-${colorBase}-600 rounded-xl flex items-center justify-center text-white shadow-xl shadow-${colorBase}-500/20 group-hover:rotate-12 transition-all duration-500`}>
               <i className="fa-solid fa-code-branch text-lg"></i>
             </div>
           </div>
 
-          {/* BARRA DE PESQUISA CENTRALIZADA */}
+          {/* BARRA DE PESQUISA */}
           <div className="w-full lg:max-w-3xl relative group">
             <i className={`fa-solid fa-terminal absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-${colorBase}-500 transition-colors`}></i>
             <input
@@ -59,7 +55,6 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* ESPAÇADOR PARA MANTER CENTRALIZADO NO DESKTOP */}
           <div className="hidden lg:block w-10"></div>
         </div>
       </div>
