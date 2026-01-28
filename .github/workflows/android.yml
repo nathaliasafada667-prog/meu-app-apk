@@ -22,31 +22,54 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Instalar dependências do projeto
+      - name: Instalar dependências
         run: npm install
 
       - name: Build do site (Vite)
         run: npm run build
 
-      - name: Instalar Capacitor e Android
+      - name: Instalar Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "Elite Store" "com.elite.store" --web-dir=dist || true
+
+      # 🔥 CONFIGURA PARA ABRIR SEU SITE ONLINE
+      - name: Configurar URL do site
+        run: |
+          cat > capacitor.config.ts << 'EOF'
+          import { CapacitorConfig } from '@capacitor/cli';
+
+          const config: CapacitorConfig = {
+            appId: 'com.elite.store',
+            appName: 'Elite Store',
+            webDir: 'dist',
+            bundledWebRuntime: false,
+            server: {
+              url: 'https://meu-app-apk.vercel.app',
+              cleartext: true
+            }
+          };
+
+          export default config;
+          EOF
+
+      - name: Adicionar Android
+        run: |
           npx cap add android || true
           npx cap sync android
 
-      # 🔥 FORÇA VERSÃO DO KOTLIN PARA EVITAR CONFLITO
+      # 🔧 Corrige conflito de Kotlin
       - name: Corrigir conflito de Kotlin
         run: |
           echo "subprojects { configurations.all { resolutionStrategy { force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'; force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'; force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22' } } }" >> android/build.gradle
 
-      - name: Dar permissão ao Gradle
+      - name: Permissão Gradle
         run: chmod +x android/gradlew
 
-      - name: Gerar APK (Debug)
+      - name: Gerar APK
         run: cd android && ./gradlew assembleDebug
 
-      - name: Enviar APK gerado
+      - name: Enviar APK
         uses: actions/upload-artifact@v4
         with:
           name: elite-store-apk
