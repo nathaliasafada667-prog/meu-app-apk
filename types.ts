@@ -5,7 +5,7 @@ export interface ModAppItem {
   packageName: string;
   version: string;
   size: string;
-  category: 'Games' | 'Tools' | 'Social' | 'Streaming' | 'Premium' | 'System';
+  category: Category;
   rating: number;
   downloads: string;
   icon: string;
@@ -19,19 +19,10 @@ export interface ModAppItem {
   lastUpdate: string;
 }
 
-export interface UserProfile {
-  id: string;
-  username: string;
-  access_code: string;
-  full_name: string;
-  is_premium: boolean;
-  expiry_date: string;
-}
-
 export interface MovieItem {
   id: string;
   tmdbId: string;
-  mediaType: 'movie' | 'tv';
+  mediaType: 'tv' | 'movie';
   title: string;
   category: Category;
   rating: number;
@@ -48,18 +39,27 @@ export interface MovieItem {
   downloadUrl: string;
 }
 
+export interface UserProfile {
+  id: string;
+  username: string;
+  access_code: string;
+  full_name: string;
+  is_premium: boolean;
+  expiry_date: string;
+}
+
 export interface SystemSettings {
   maintenance_enabled: boolean;
   maintenance_message: string;
+  maintenance_start_at?: string;
 }
 
-export type Category = 'All' | 'Games' | 'Tools' | 'Social' | 'Streaming' | 'Premium' | 'Ação' | 'Terror' | 'Comédia' | 'Ficção' | 'Drama' | 'Série';
+export type Category = 'All' | 'Apps' | 'Games' | 'Premium' | 'Ação' | 'Terror' | 'Comédia' | 'Ficção' | 'Drama' | 'Série';
 export type Language = 'pt' | 'en' | 'es' | 'ru' | 'fr' | 'it' | 'ko' | 'ja';
 export type ThemeColor = 'blue' | 'emerald' | 'rose' | 'amber' | 'purple' | 'cyan' | 'red' | 'orange' | 'lime' | 'fuchsia';
 export type AnimationStyle = 'soft-zoom' | 'cyber-glitch' | 'slide-deep' | 'rotate-3d';
 
 export interface TranslationSchema {
-  // General & Hero
   heroTitle: string;
   heroDesc: string;
   searchPlaceholder: string;
@@ -69,26 +69,19 @@ export interface TranslationSchema {
   downloadBtn: string;
   maintenanceTitle: string;
   backSoon: string;
-  
-  // Navigation & Categories
   categoryAll: string;
+  categoryApps: string;
   categoryGames: string;
-  categoryTools: string;
-  categorySocial: string;
-  categoryStreaming: string;
   categoryPremium: string;
-  
-  // Components
   scanSteps: string[];
   devSpecialist: string;
   aboutSystem: string;
   devDesc: string;
   telegram: string;
-  
-  // CineHub / Settings Menu
   accessTab: string;
   collectionTab: string;
   settingsTab: string;
+  requestsTab: string;
   noFavorites: string;
   agentPanel: string;
   usernameLabel: string;
@@ -109,8 +102,7 @@ export interface TranslationSchema {
   glassBlur: string;
   amoledEconomy: string;
   cyberMode: string;
-  
-  // Auth & Pricing
+  aiVoiceToggle: string; // Nova tradução
   restrictedAccess: string;
   loginTitle: string;
   inputUser: string;
@@ -125,8 +117,6 @@ export interface TranslationSchema {
   buyNow: string;
   supportTitle: string;
   supportDesc: string;
-  
-  // Details & Security
   secureTransfer: string;
   analyzingApk: string;
   authSelo: string;
@@ -142,10 +132,13 @@ export interface TranslationSchema {
   modFeaturesLabel: string;
   aboutAppLabel: string;
   premiumRequired: string;
-
-  // New Search & Request
   requestAppTitle: string;
   requestAppDesc: string;
   requestWithDev: string;
   requestWithPartner: string;
+  requestPlaceholderApp: string;
+  requestPlaceholderDetails: string;
+  requestSubmitBtn: string;
+  requestSuccessTitle: string;
+  requestTicketLabel: string;
 }
