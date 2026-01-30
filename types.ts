@@ -19,10 +19,11 @@ export interface ModAppItem {
   lastUpdate: string;
 }
 
+// Added MovieItem interface to support movieApiService.ts requirements
 export interface MovieItem {
   id: string;
   tmdbId: string;
-  mediaType: 'tv' | 'movie';
+  mediaType: 'movie' | 'tv';
   title: string;
   category: Category;
   rating: number;
@@ -54,12 +55,28 @@ export interface SystemSettings {
   maintenance_start_at?: string;
 }
 
+// Expanded Category to include all categories used in the app, including the movie genres from movieApiService
 export type Category = 'All' | 'Apps' | 'Games' | 'Premium' | 'Ação' | 'Terror' | 'Comédia' | 'Ficção' | 'Drama' | 'Série';
 export type Language = 'pt' | 'en' | 'es' | 'ru' | 'fr' | 'it' | 'ko' | 'ja';
 export type ThemeColor = 'blue' | 'emerald' | 'rose' | 'amber' | 'purple' | 'cyan' | 'red' | 'orange' | 'lime' | 'fuchsia';
 export type AnimationStyle = 'soft-zoom' | 'cyber-glitch' | 'slide-deep' | 'rotate-3d';
 
 export interface TranslationSchema {
+  downloaderTab: string;
+  downloaderPlaceholder: string;
+  downloaderBtn: string;
+  downloaderTitle: string;
+  downloaderDesc: string;
+  requestsTab: string;
+  requestPlaceholderApp: string;
+  requestPlaceholderDetails: string;
+  requestSubmitBtn: string;
+  requestSuccessTitle: string;
+  requestTicketLabel: string;
+  categoryAll: string;
+  categoryApps: string;
+  categoryGames: string;
+  categoryPremium: string;
   heroTitle: string;
   heroDesc: string;
   searchPlaceholder: string;
@@ -69,10 +86,6 @@ export interface TranslationSchema {
   downloadBtn: string;
   maintenanceTitle: string;
   backSoon: string;
-  categoryAll: string;
-  categoryApps: string;
-  categoryGames: string;
-  categoryPremium: string;
   scanSteps: string[];
   devSpecialist: string;
   aboutSystem: string;
@@ -81,7 +94,6 @@ export interface TranslationSchema {
   accessTab: string;
   collectionTab: string;
   settingsTab: string;
-  requestsTab: string;
   noFavorites: string;
   agentPanel: string;
   usernameLabel: string;
@@ -102,7 +114,6 @@ export interface TranslationSchema {
   glassBlur: string;
   amoledEconomy: string;
   cyberMode: string;
-  aiVoiceToggle: string; // Nova tradução
   restrictedAccess: string;
   loginTitle: string;
   inputUser: string;
@@ -132,13 +143,4 @@ export interface TranslationSchema {
   modFeaturesLabel: string;
   aboutAppLabel: string;
   premiumRequired: string;
-  requestAppTitle: string;
-  requestAppDesc: string;
-  requestWithDev: string;
-  requestWithPartner: string;
-  requestPlaceholderApp: string;
-  requestPlaceholderDetails: string;
-  requestSubmitBtn: string;
-  requestSuccessTitle: string;
-  requestTicketLabel: string;
 }

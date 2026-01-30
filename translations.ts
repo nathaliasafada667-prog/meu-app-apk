@@ -2,6 +2,11 @@
 import { Language, TranslationSchema } from './types';
 
 const ptFull: TranslationSchema = {
+    downloaderTab: "Downloader",
+    downloaderPlaceholder: "Cole o link do Instagram ou TikTok aqui...",
+    downloaderBtn: "CAPTURAR VÍDEO",
+    downloaderTitle: "SOCIAL DOWNLOADER",
+    downloaderDesc: "Capture mídias em alta definição sem marcas d'água.",
     requestsTab: "Pedidos",
     requestPlaceholderApp: "Nome do App ou Jogo",
     requestPlaceholderDetails: "Detalhes do MOD (ex: Moedas Infinitas)",
@@ -49,7 +54,6 @@ const ptFull: TranslationSchema = {
     glassBlur: "Intensidade do Vidro",
     amoledEconomy: "Economia AMOLED",
     cyberMode: "Cyber Mode",
-    aiVoiceToggle: "Voz da IA Esmael",
     restrictedAccess: "Acesso Restrito",
     loginTitle: "Validação de Protocolo Elite",
     inputUser: "Nome de Usuário",
@@ -79,14 +83,15 @@ const ptFull: TranslationSchema = {
     modFeaturesLabel: "Recursos do Mod",
     aboutAppLabel: "Sobre o App",
     premiumRequired: "Usuários comuns possuem download restrito. Clique para ver preços.",
-    requestAppTitle: "APK Não Disponível",
-    requestAppDesc: "Este aplicativo ainda não foi catalogado no sistema. Deseja solicitar uma versão modificada aos nossos especialistas?",
-    requestWithDev: "Solicitar via EsmaelX",
-    requestWithPartner: "Solicitar via Parceiro",
 };
 
 const enFull: TranslationSchema = {
     ...ptFull,
+    downloaderTab: "Downloader",
+    downloaderPlaceholder: "Paste Instagram or TikTok link here...",
+    downloaderBtn: "CAPTURE VIDEO",
+    downloaderTitle: "SOCIAL DOWNLOADER",
+    downloaderDesc: "Capture high-definition media without watermarks.",
     requestsTab: "Requests",
     categoryAll: "Home",
     categoryApps: "Apps",
@@ -129,7 +134,6 @@ const enFull: TranslationSchema = {
     glassBlur: "Glass Intensity",
     amoledEconomy: "AMOLED Economy",
     cyberMode: "Cyber Mode",
-    aiVoiceToggle: "Esmael AI Voice",
     restrictedAccess: "Restricted Access",
     loginTitle: "Elite Protocol Validation",
     inputUser: "Username",
@@ -159,19 +163,15 @@ const enFull: TranslationSchema = {
     modFeaturesLabel: "Mod Features",
     aboutAppLabel: "About the App",
     premiumRequired: "Common users have restricted downloads. Click for pricing.",
-    requestAppTitle: "APK Not Available",
-    requestAppDesc: "This application has not yet been cataloged in the system. Would you like to request a modified version from our specialists?",
-    requestWithDev: "Request via EsmaelX",
-    requestWithPartner: "Request via Partner",
 };
 
 export const translations: Record<Language, TranslationSchema> = {
   pt: ptFull,
   en: enFull,
-  es: { ...ptFull, requestsTab: "Pedidos", categoryAll: "Inicio" },
-  ru: { ...ptFull, requestsTab: "Запросы", categoryAll: "Главная" },
-  fr: { ...ptFull, requestsTab: "Requêtes", categoryAll: "Accueil" },
-  it: { ...ptFull, requestsTab: "Richieste", categoryAll: "Inizio" },
-  ko: { ...ptFull, requestsTab: "요청", categoryAll: "홈" },
-  ja: { ...ptFull, requestsTab: "リクエスト", categoryAll: "ホーム" }
+  es: { ...ptFull, downloaderTab: "Downloader", categoryAll: "Inicio" },
+  ru: { ...ptFull, downloaderTab: "Загрузчик", categoryAll: "Главная" },
+  fr: { ...ptFull, downloaderTab: "Téléchargeur", categoryAll: "Accueil" },
+  it: { ...ptFull, downloaderTab: "Scaricatore", categoryAll: "Inizio" },
+  ko: { ...ptFull, downloaderTab: "다운로더", categoryAll: "홈" },
+  ja: { ...ptFull, downloaderTab: "ダウンロード", categoryAll: "ホーム" }
 };
