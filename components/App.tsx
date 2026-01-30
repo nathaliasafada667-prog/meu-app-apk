@@ -10,6 +10,7 @@ import DevProfile from './DevProfile.tsx';
 import CineHub from './CineHub.tsx';
 import AuthModal from './AuthModal.tsx';
 import PricingModal from './PricingModal.tsx';
+import VideoDownloader from './VideoDownloader.tsx';
 
 interface ExtendedSettings extends SystemSettings {
   maintenance_start_at?: string;
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
+  const [showDownloader, setShowDownloader] = useState(false);
   const [apps, setApps] = useState<ModAppItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isBooting, setIsBooting] = useState(true);
@@ -209,6 +211,8 @@ const App: React.FC = () => {
 
       {showAuth && <AuthModal onSuccess={(data) => { setUserProfile(data); setShowAuth(false); }} onShowPricing={() => { setShowPricing(true); setShowAuth(false); }} onClose={() => setShowAuth(false)} activeColor={themeColors[theme]} language={lang} />}
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} activeColor={themeColors[theme]} language={lang} />}
+      {showDownloader && <VideoDownloader onClose={() => setShowDownloader(false)} language={lang} activeColor={themeColors[theme]} />}
+      
       {selectedApp && (
         <AppDetails 
           app={selectedApp} onClose={() => setSelectedApp(null)} language={lang} activeColor={themeColors[theme]} 
@@ -250,7 +254,7 @@ const App: React.FC = () => {
         user={userProfile} onLogout={() => { setUserProfile(null); localStorage.removeItem('esmael_session'); }} onRequireAuth={() => setShowAuth(true)} onShowPricing={() => setShowPricing(true)}
         animationStyle={animationStyle} setAnimationStyle={setAnimationStyle} isCyberMode={isCyberMode} setIsCyberMode={setIsCyberMode}
         glassIntensity={glassIntensity} setGlassIntensity={setGlassIntensity} activeFont={activeFont} setActiveFont={setActiveFont}
-        favorites={favorites} apps={apps} onSelectApp={setSelectedApp}
+        favorites={favorites} apps={apps} onSelectApp={setSelectedApp} onOpenDownloader={() => setShowDownloader(true)}
       />
     </div>
   );

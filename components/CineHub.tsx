@@ -28,6 +28,7 @@ interface CineHubProps {
   favorites: string[];
   apps: ModAppItem[];
   onSelectApp: (app: ModAppItem) => void;
+  onOpenDownloader: () => void;
 }
 
 const CineHub: React.FC<CineHubProps> = ({ 
@@ -35,15 +36,11 @@ const CineHub: React.FC<CineHubProps> = ({
   isEnergySaving, setIsEnergySaving, onOpenDev, user, onLogout, 
   onRequireAuth, onShowPricing, animationStyle, setAnimationStyle,
   isCyberMode, setIsCyberMode, glassIntensity, setGlassIntensity,
-  activeFont, setActiveFont, favorites, apps, onSelectApp
+  activeFont, setActiveFont, favorites, apps, onSelectApp, onOpenDownloader
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'access' | 'collection' | 'requests' | 'settings'>('access');
+  const [activeTab, setActiveTab] = useState<'access' | 'collection' | 'tools' | 'settings'>('access');
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [requesting, setRequesting] = useState(false);
-  const [appName, setAppName] = useState("");
-  const [appDetails, setAppDetails] = useState("");
-  const [ticketId, setTicketId] = useState<string | null>(null);
 
   const t = translations[language] || translations['pt'];
   const colorBase = activeColor.split('-')[0];
@@ -61,7 +58,7 @@ const CineHub: React.FC<CineHubProps> = ({
     switch (activeTab) {
       case 'access': return { small: 'Identidade Digital', big: t.accessTab };
       case 'collection': return { small: 'Biblioteca Local', big: t.collectionTab };
-      case 'requests': return { small: 'Central de Suporte', big: t.requestsTab };
+      case 'tools': return { small: 'Recursos Extraordinários', big: 'Tools' };
       case 'settings': return { small: 'Kernel do Sistema', big: t.settingsTab };
       default: return { small: 'CineHub v4.1', big: t.agentPanel };
     }
@@ -73,17 +70,6 @@ const CineHub: React.FC<CineHubProps> = ({
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
-
-  const handleSubmitRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) { onRequireAuth(); return; }
-    setRequesting(true);
-    const newTicketId = `#MOD-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-    try {
-      await supabase.from('mod_requests').insert({ username: user.username, app_name: appName, details: appDetails, ticket_id: newTicketId });
-      setTicketId(newTicketId); setAppName(""); setAppDetails("");
-    } catch (err) { alert("Erro ao enviar pedido."); } finally { setRequesting(false); }
-  };
 
   const favoriteApps = apps.filter(app => favorites.includes(app.id));
 
@@ -111,7 +97,20 @@ const CineHub: React.FC<CineHubProps> = ({
                <button onClick={() => setIsOpen(false)} className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-white/40 hover:text-white transition-all"><i className="fa-solid fa-xmark"></i></button>
             </div>
 
-            <div className="flex px-8 mb-6 overflow-x-auto no-scrollbar"><div className="flex-1 bg-white/5 p-1 rounded-2xl flex gap-1">{(['access', 'collection', 'requests', 'settings'] as const).map(tab => (<button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-3 rounded-xl text-[7px] md:text-[8px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? `bg-${colorBase}-600 text-white` : 'text-gray-500'}`}>{tab === 'access' ? t.accessTab : tab === 'collection' ? t.collectionTab : tab === 'requests' ? t.requestsTab : t.settingsTab}</button>))}</div></div>
+            <div className="flex px-8 mb-6 overflow-x-auto no-scrollbar">
+              <div className="flex-1 bg-white/5 p-1 rounded-2xl flex gap-1">
+                {(['access', 'collection', 'tools', 'settings'] as const).map(tab => (
+                  <button 
+                    key={tab} 
+                    onClick={() => setActiveTab(tab)} 
+                    className={`flex-1 py-3 rounded-xl text-[7px] md:text-[8px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? `bg-${colorBase}-600 text-white` : 'text-gray-500'}`}
+                  >
+                    {tab === 'access' ? t.accessTab : tab === 'collection' ? t.collectionTab : tab === 'tools' ? 'Tools' : t.settingsTab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="flex-1 overflow-y-auto no-scrollbar px-8 pb-20">
               {activeTab === 'access' && (
                 <div className="space-y-6 animate-soft-zoom">
@@ -136,9 +135,24 @@ const CineHub: React.FC<CineHubProps> = ({
                    {favoriteApps.length === 0 ? <div className="py-20 flex flex-col items-center text-center space-y-4 text-white/20"><i className="fa-solid fa-heart-crack text-5xl"></i><p className="text-[10px] font-black uppercase tracking-[0.2em]">{t.noFavorites}</p></div> : <div className="grid grid-cols-1 gap-3">{favoriteApps.map(app => (<div key={app.id} onClick={() => { onSelectApp(app); setIsOpen(false); }} className="flex items-center gap-4 p-4 glass border-white/5 rounded-2xl hover:bg-white/[0.05] transition-all cursor-pointer group"><img src={app.icon} className="w-14 h-14 rounded-xl" /><div className="flex-1 min-w-0"><h4 className="text-sm font-black text-white truncate italic">{app.title}</h4></div><i className="fa-solid fa-chevron-right text-[10px] text-gray-800"></i></div>))}</div>}
                 </div>
               )}
-              {activeTab === 'requests' && (
+              {activeTab === 'tools' && (
                  <div className="space-y-6 animate-soft-zoom">
-                    {!ticketId ? (<form onSubmit={handleSubmitRequest} className="space-y-4"><div className="glass p-6 rounded-[2rem] border-white/10 space-y-4"><div className="space-y-2"><label className="text-[8px] font-black text-gray-500 uppercase tracking-widest ml-1">{t.requestPlaceholderApp}</label><input required type="text" value={appName} onChange={(e) => setAppName(e.target.value)} className={`w-full bg-white/[0.02] border border-white/10 focus:border-${colorBase}-500 p-4 rounded-xl text-xs text-white outline-none uppercase`} placeholder="..." /></div><div className="space-y-2"><label className="text-[8px] font-black text-gray-500 uppercase tracking-widest ml-1">{t.requestPlaceholderDetails}</label><textarea rows={3} value={appDetails} onChange={(e) => setAppDetails(e.target.value)} className={`w-full bg-white/[0.02] border border-white/10 focus:border-${colorBase}-500 p-4 rounded-xl text-xs text-white outline-none resize-none`} placeholder="..." /></div></div><button disabled={requesting} className={`w-full py-5 rounded-2xl bg-${colorBase}-600 text-white font-black text-[10px] uppercase tracking-widest shadow-xl disabled:opacity-50`}>{requesting ? <i className="fa-solid fa-circle-notch animate-spin"></i> : t.requestSubmitBtn}</button></form>) : (<div className="glass p-10 rounded-[2.5rem] border-white/10 text-center space-y-6"><i className="fa-solid fa-check-to-slot text-3xl text-emerald-500"></i><h3 className="text-xl font-black text-white uppercase italic">{t.requestSuccessTitle}</h3><div className="p-5 bg-white/[0.03] border border-white/5 rounded-2xl"><p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">{t.requestTicketLabel}</p><p className={`text-2xl font-black text-${colorBase}-500 tracking-widest`}>{ticketId}</p></div><button onClick={() => setTicketId(null)} className="text-[9px] font-black text-white/30 uppercase tracking-widest hover:text-white">Fazer novo pedido</button></div>)}
+                    <div 
+                      onClick={() => { onOpenDownloader(); setIsOpen(false); }}
+                      className={`glass p-8 rounded-[2.5rem] border-white/10 flex flex-col items-center text-center relative overflow-hidden group cursor-pointer hover:bg-${colorBase}-500/5 transition-all active:scale-95`}
+                    >
+                       <div className={`absolute top-0 left-0 w-full h-1 bg-${colorBase}-500`}></div>
+                       <div className={`w-20 h-20 bg-${colorBase}-600/10 rounded-3xl flex items-center justify-center mb-6 border border-${colorBase}-500/20 group-hover:scale-110 transition-transform`}>
+                          <i className={`fa-solid fa-video text-3xl text-${colorBase}-500`}></i>
+                       </div>
+                       <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Social Downloader Elite</h3>
+                       <p className="text-gray-500 text-[8px] font-black uppercase tracking-[0.3em] mt-2">Baixar Vídeos do Instagram e TikTok</p>
+                    </div>
+
+                    <div className="glass p-6 rounded-3xl border-white/5 opacity-50 flex items-center gap-4">
+                       <i className="fa-solid fa-microchip text-gray-600"></i>
+                       <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Mais recursos em breve...</span>
+                    </div>
                  </div>
               )}
               {activeTab === 'settings' && (
