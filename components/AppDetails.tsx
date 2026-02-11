@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { ModAppItem, Language, UserProfile } from '../types';
 import { translations } from '../translations';
+import { supabase } from '../lib/supabase';
 
 interface AppDetailsProps {
   app: ModAppItem;
@@ -25,7 +26,11 @@ const AppDetails: React.FC<AppDetailsProps> = ({
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showVerifyInfo, setShowVerifyInfo] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   
+  // Estado para contagem real de downloads
+  const [realDownloads, setRealDownloads] = useState(app.downloads);
+
   const t = translations[language] || translations['pt'];
   const colorBase = activeColor.split('-')[0];
 
@@ -46,7 +51,7 @@ const AppDetails: React.FC<AppDetailsProps> = ({
     };
   }, [t.scanSteps.length]);
 
-  // Efeito para simular o progresso do download
+  // Efeito para simular o progresso do download visual
   useEffect(() => {
     let interval: any;
     if (isDownloading) {
@@ -66,6 +71,32 @@ const AppDetails: React.FC<AppDetailsProps> = ({
     return () => clearInterval(interval);
   }, [isDownloading]);
 
+  // Função para incrementar downloads reais no banco
+  const incrementDownloadCount = async () => {
+    try {
+      // Tenta limpar a string para obter apenas números (remove 'M', 'K', etc para começar a contar real)
+      // Se for a primeira vez e tiver "1.2M", vai virar "12" e começar a contar dali, ou podemos assumir 0 se for string complexa.
+      // Para manter simples e funcional: extrai números, se vazio assume 0.
+      let currentString = realDownloads.replace(/[^0-9]/g, '');
+      let currentVal = currentString ? parseInt(currentString, 10) : 0;
+
+      const newVal = currentVal + 1;
+      const newValString = newVal.toString();
+
+      // Atualiza visualmente na hora
+      setRealDownloads(newValString);
+
+      // Atualiza no Supabase (silenciosamente)
+      await supabase
+        .from('apps')
+        .update({ downloads: newValString })
+        .eq('id', app.id);
+        
+    } catch (error) {
+      console.error("Erro ao contabilizar download:", error);
+    }
+  };
+
   const handleDownloadAttempt = () => {
     if (!app.isPremium) {
       startDownload();
@@ -84,10 +115,23 @@ const AppDetails: React.FC<AppDetailsProps> = ({
 
   const startDownload = () => {
     setIsDownloading(true);
+    incrementDownloadCount(); // Incrementa o contador real
+    
     setTimeout(() => {
       setIsDownloading(false);
       window.open(app.downloadUrl, '_blank');
     }, 2200);
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}?app_id=${app.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
   };
 
   const renderDownloadButton = () => {
@@ -175,6 +219,16 @@ const AppDetails: React.FC<AppDetailsProps> = ({
            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
            
            <div className="absolute top-6 right-6 z-20 flex gap-4">
+              {/* Botão Share */}
+              <button onClick={handleShare} className="relative w-12 h-12 glass rounded-xl flex items-center justify-center text-white/70 border-white/10 hover:text-white hover:bg-white/10 transition-all active:scale-95 group">
+                <i className={`fa-solid ${copiedLink ? 'fa-check text-emerald-500' : 'fa-share-nodes'} text-lg`}></i>
+                {copiedLink && (
+                  <span className="absolute -bottom-8 bg-emerald-500 text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-wide animate-fade-in whitespace-nowrap">
+                    {t.linkCopied}
+                  </span>
+                )}
+              </button>
+
               {onToggleFavorite && (
                 <button onClick={() => onToggleFavorite(app.id)} className={`w-12 h-12 glass rounded-xl flex items-center justify-center border-white/10 ${isFavorite ? 'text-rose-500' : 'text-white/40'}`}>
                   <i className={`fa-${isFavorite ? 'solid' : 'regular'} fa-heart text-lg`}></i>
@@ -190,104 +244,93 @@ const AppDetails: React.FC<AppDetailsProps> = ({
                     <span className={`px-3 py-1 bg-${colorBase}-600 text-white text-[8px] font-black rounded-lg uppercase tracking-widest`}>{app.category}</span>
                     {app.isVerified && <span className="text-emerald-500 text-[9px] font-black uppercase flex items-center gap-1"><i className="fa-solid fa-circle-check"></i> {t.verifiedBadge}</span>}
                  </div>
-                 <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-white uppercase italic leading-none">{app.title}</h2>
-                 <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{app.packageName} • v{app.version}</p>
+                 <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-white uppercase italic leading-[0.9] text-shadow-lg">
+                    {app.title}
+                 </h2>
+                 <p className="text-gray-400 text-sm font-medium">v{app.version} • {app.size} • <span className="text-white font-bold"><i className="fa-solid fa-download text-xs ml-1"></i> {realDownloads}</span></p>
               </div>
            </div>
         </div>
 
-        {/* Content */}
-        <div className="container mx-auto px-6 md:px-20 grid grid-cols-1 lg:grid-cols-12 gap-12 mt-10">
-           <div className="lg:col-span-8 space-y-16">
-              {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                 {[
-                   { label: t.sizeLabel, val: app.size, icon: 'fa-box' },
-                   { label: t.downloadsLabel, val: app.downloads, icon: 'fa-download' },
-                   { label: t.authorLabel, val: app.author, icon: 'fa-user-ninja' },
-                   { label: t.updateLabel, val: app.lastUpdate, icon: 'fa-clock' }
-                 ].map((stat, i) => (
-                   <div key={i} className="glass p-5 rounded-[2rem] border-white/5 text-center flex flex-col items-center">
-                      <i className={`fa-solid ${stat.icon} text-${colorBase}-500 text-lg mb-2`}></i>
-                      <p className="text-[8px] font-black text-white/30 uppercase tracking-widest">{stat.label}</p>
-                      <p className="text-white text-sm font-black">{stat.val}</p>
-                   </div>
-                 ))}
-              </div>
-
-              {/* Mod Features */}
-              <div className="space-y-6">
-                 <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">MOD FEATURES ELITE</h4>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {app.modFeatures.map((feat, i) => (
-                      <div key={i} className="flex items-center gap-4 bg-white/[0.03] border border-white/5 p-5 rounded-2xl group hover:bg-white/[0.06] transition-all">
-                         <div className={`w-8 h-8 rounded-lg bg-${colorBase}-500/20 flex items-center justify-center text-${colorBase}-500`}>
-                            <i className="fa-solid fa-bolt-lightning text-xs"></i>
-                         </div>
-                         <span className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">{feat}</span>
-                      </div>
-                    ))}
-                 </div>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-6">
-                 <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">{t.aboutAppLabel}</h4>
-                 <div className="text-gray-400 text-lg md:text-2xl leading-relaxed font-medium whitespace-pre-line border-l-2 border-white/5 pl-6">
-                    {app.description}
-                 </div>
-              </div>
+        {/* Content Body */}
+        <div className="max-w-7xl mx-auto px-6 md:px-12 -mt-4 relative z-10 space-y-8">
+           
+           {/* Download Action Area */}
+           <div className="flex flex-col md:flex-row gap-4">
+              <button 
+                onClick={handleDownloadAttempt}
+                disabled={isDownloading}
+                className={`flex-1 h-20 md:h-24 rounded-[2rem] bg-${colorBase}-600 text-white font-black text-xs md:text-sm uppercase tracking-[0.2em] shadow-[0_10px_40px_rgba(0,0,0,0.6)] shadow-${colorBase}-500/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-4 overflow-hidden relative`}
+              >
+                {/* Background Progress Bar */}
+                <div 
+                   className={`absolute left-0 top-0 h-full bg-white/20 transition-all duration-300 ease-linear`}
+                   style={{ width: `${downloadProgress}%` }}
+                ></div>
+                {renderDownloadButton()}
+              </button>
+              
+              <button onClick={() => setShowVerifyInfo(true)} className="h-20 md:h-24 px-8 rounded-[2rem] glass border-white/10 hover:bg-white/5 transition-all flex flex-col items-center justify-center gap-1 min-w-[100px]">
+                 <i className="fa-solid fa-shield-halved text-emerald-500 text-xl"></i>
+                 <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{t.authSelo}</span>
+              </button>
            </div>
 
-           {/* Sidebar Download */}
-           <div className="lg:col-span-4 h-fit lg:sticky lg:top-10">
-              <div className="glass p-8 rounded-[3rem] border-white/5 flex flex-col items-center text-center space-y-8 bg-gradient-to-b from-white/[0.02] to-transparent relative overflow-hidden">
-                 
-                 {/* Progress Ring Overlay */}
-                 {isDownloading && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                       <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 200 200">
-                          <circle
-                            cx="100" cy="100" r={radius}
-                            fill="transparent"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            className="text-white/5"
-                          />
-                          <circle
-                            cx="100" cy="100" r={radius}
-                            fill="transparent"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            strokeDasharray={circumference}
-                            strokeDashoffset={strokeDashoffset}
-                            strokeLinecap="round"
-                            className={`text-${colorBase}-500 transition-all duration-300 ease-out`}
-                            style={{ filter: `drop-shadow(0 0 8px currentColor)` }}
-                          />
-                       </svg>
-                    </div>
-                 )}
+           {/* Descrição e Features */}
+           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">
+              <div className="lg:col-span-2 space-y-8">
+                 <div className="glass p-8 md:p-10 rounded-[2.5rem] border-white/5 space-y-6">
+                    <h3 className="text-xl font-black text-white uppercase italic tracking-tighter flex items-center gap-3">
+                       <i className={`fa-solid fa-align-left text-${colorBase}-500`}></i> {t.aboutAppLabel}
+                    </h3>
+                    <p className="text-gray-400 leading-relaxed text-sm md:text-base font-medium">
+                       {app.description}
+                    </p>
+                 </div>
 
-                 <div className="w-20 h-20 glass rounded-3xl flex items-center justify-center relative z-10">
-                    <i className={`fa-solid fa-cloud-arrow-down text-3xl text-${colorBase}-500 ${isDownloading ? 'animate-pulse' : 'animate-bounce'}`}></i>
-                 </div>
-                 
-                 <div className="space-y-1 relative z-10">
-                    <h5 className="text-xl font-black text-white uppercase italic tracking-tighter">TRANSFERÊNCIA SEGURA</h5>
-                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Protocolo v11.4</p>
-                 </div>
-                 
-                 <button 
-                    onClick={handleDownloadAttempt}
-                    disabled={isDownloading}
-                    className={`w-full py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 transition-all relative overflow-hidden ${isDownloading ? 'bg-transparent text-white border border-white/10' : 'bg-white text-black hover:scale-105 active:scale-95 shadow-2xl shadow-white/5'}`}
-                 >
-                    {renderDownloadButton()}
-                 </button>
-                 
-                 <div className="relative z-10">
-                   <p className="text-[7px] font-black text-gray-800 uppercase tracking-widest">Verificado e Assinado por EsmaelX</p>
+                 {app.modFeatures && app.modFeatures.length > 0 && (
+                   <div className="glass p-8 md:p-10 rounded-[2.5rem] border-white/5 space-y-6">
+                      <h3 className="text-xl font-black text-white uppercase italic tracking-tighter flex items-center gap-3">
+                         <i className={`fa-solid fa-microchip text-${colorBase}-500`}></i> {t.modFeaturesLabel}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         {app.modFeatures.map((feat, i) => (
+                           <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5">
+                              <div className={`w-8 h-8 rounded-full bg-${colorBase}-500/10 flex items-center justify-center text-${colorBase}-500`}>
+                                 <i className="fa-solid fa-check text-xs"></i>
+                              </div>
+                              <span className="text-sm font-bold text-gray-300">{feat}</span>
+                           </div>
+                         ))}
+                      </div>
+                   </div>
+                 )}
+              </div>
+
+              <div className="space-y-4">
+                 <div className="glass p-8 rounded-[2.5rem] border-white/5 space-y-6">
+                    <h3 className="text-sm font-black text-gray-500 uppercase tracking-widest mb-4">Info Técnica</h3>
+                    
+                    <div className="flex justify-between items-center py-3 border-b border-white/5">
+                       <span className="text-xs text-gray-500 font-bold uppercase">{t.authorLabel}</span>
+                       <span className="text-xs text-white font-bold">{app.author}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-white/5">
+                       <span className="text-xs text-gray-500 font-bold uppercase">{t.updateLabel}</span>
+                       <span className="text-xs text-white font-bold">{app.lastUpdate}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-white/5">
+                       <span className="text-xs text-gray-500 font-bold uppercase">{t.sizeLabel}</span>
+                       <span className="text-xs text-white font-bold">{app.size}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-white/5">
+                       <span className="text-xs text-gray-500 font-bold uppercase">Versão</span>
+                       <span className="text-xs text-white font-bold">{app.version}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3">
+                       <span className="text-xs text-gray-500 font-bold uppercase">Package</span>
+                       <span className="text-xs text-gray-500 font-mono truncate max-w-[150px]">{app.packageName}</span>
+                    </div>
                  </div>
               </div>
            </div>

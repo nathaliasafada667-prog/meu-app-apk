@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase.ts';
 import { translations } from '../translations.ts';
@@ -36,12 +37,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onShowPricing, onClose
       if (dbError) throw dbError;
 
       if (!data) {
-        throw new Error(t.noResults);
+        throw new Error(t.authInvalidCredentials);
       }
 
       const expiryDate = new Date(data.expiry_date);
       if (expiryDate < new Date()) {
-        throw new Error('Expired');
+        throw new Error(t.authExpired);
       }
 
       localStorage.setItem('esmael_session', JSON.stringify(data));

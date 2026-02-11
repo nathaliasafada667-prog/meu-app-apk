@@ -7,15 +7,18 @@ interface NavbarProps {
   onSearch: (query: string) => void;
   language: Language;
   activeColor: string;
+  onOpenFavorites: () => void;
+  onOpenProfile: () => void;
+  onOpenDev: () => void; // Nova prop para abrir o perfil do dev
+  favoritesCount: number;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ 
-  onSearch, language, activeColor
+  onSearch, language, activeColor, onOpenFavorites, onOpenProfile, onOpenDev, favoritesCount
 }) => {
   const [searchValue, setSearchValue] = useState("");
-  
-  const t = translations[language];
   const colorBase = activeColor.split('-')[0];
+  const t = translations[language];
 
   const handleSearchChange = (val: string) => {
     setSearchValue(val);
@@ -23,40 +26,60 @@ const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[60] glass border-b border-white/5 backdrop-blur-3xl pt-6 pb-4 md:pt-8 md:pb-6">
-      <div className="container mx-auto px-6 flex flex-col items-center gap-4">
+    <nav className="fixed top-0 left-0 right-0 z-[60] bg-black/80 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
+      <div className="container mx-auto px-4 md:px-8 h-20 flex items-center justify-between gap-6">
         
-        {/* TÍTULO CENTRALIZADO */}
-        <div className="flex flex-col items-center text-center space-y-1 mb-1">
-           <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-white uppercase italic leading-none">
-             {t.heroTitle.split(' ')[0]} <span className={`text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20`}>{t.heroTitle.split(' ').slice(1).join(' ')}</span>
-           </h1>
+        {/* LOGO DA LOJA - AGORA ABRE O PERFIL DO DEV */}
+        <div 
+          className="flex items-center gap-3 cursor-pointer flex-shrink-0 group" 
+          onClick={onOpenDev}
+          title="Sobre o Desenvolvedor"
+        >
+           <div className={`w-10 h-10 rounded-xl bg-gradient-to-br from-${colorBase}-500 to-${colorBase}-700 flex items-center justify-center text-white shadow-lg shadow-${colorBase}-500/20 group-hover:scale-110 transition-transform duration-300`}>
+              <span className="font-black text-lg tracking-tighter">E</span>
+           </div>
+           <div className="hidden md:flex flex-col group-hover:opacity-80 transition-opacity">
+              <span className="text-white font-bold text-lg leading-none tracking-tight">ESMAEL<span className={`text-${colorBase}-500`}>STORE</span></span>
+              <span className="text-gray-500 text-[9px] font-bold uppercase tracking-[0.2em] group-hover:text-white transition-colors">Dev Profile & Info</span>
+           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-center justify-between w-full gap-4">
-          {/* LOGO SIMPLIFICADO */}
-          <div className="hidden lg:flex items-center gap-3 cursor-pointer group" onClick={() => window.location.reload()}>
-            <div className={`w-10 h-10 bg-${colorBase}-600 rounded-xl flex items-center justify-center text-white shadow-xl shadow-${colorBase}-500/20 group-hover:rotate-12 transition-all duration-500`}>
-              <i className="fa-solid fa-code-branch text-lg"></i>
-            </div>
-          </div>
-
-          {/* BARRA DE PESQUISA */}
-          <div className="w-full lg:max-w-3xl relative group">
-            <i className={`fa-solid fa-terminal absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-${colorBase}-500 transition-colors`}></i>
-            <input
-              type="text" value={searchValue} placeholder={t.searchPlaceholder}
+        {/* BARRA DE BUSCA ESTILO LOJA */}
+        <div className="flex-1 max-w-2xl relative group">
+           <input
+              type="text" 
+              value={searchValue} 
+              placeholder="O que você procura hoje?"
               onChange={(e) => handleSearchChange(e.target.value)}
-              className={`w-full bg-white/5 border border-white/10 rounded-2xl py-4 md:py-5 pl-12 pr-12 focus:outline-none focus:border-${colorBase}-500/50 text-sm transition-all focus:bg-white/10 shadow-2xl`}
+              className="w-full bg-[#111] border border-white/10 rounded-full py-3 pl-12 pr-4 text-sm text-gray-200 focus:outline-none focus:bg-[#1a1a1a] focus:border-white/20 transition-all placeholder:text-gray-600"
             />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-               <div className={`w-1.5 h-1.5 rounded-full bg-${colorBase}-500 animate-pulse`}></div>
-               <span className="text-[8px] font-black text-white/20 uppercase tracking-widest hidden md:inline">Secure</span>
-            </div>
-          </div>
-
-          <div className="hidden lg:block w-10"></div>
+            <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
         </div>
+
+        {/* ÍCONES DE AÇÃO */}
+        <div className="flex items-center gap-4 flex-shrink-0">
+           {/* Botão de Favoritos (Antigo Notificação) */}
+           <button 
+             onClick={onOpenFavorites}
+             className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/70 hover:bg-white/10 hover:text-red-500 transition-all relative group"
+           >
+              <i className={`fa-${favoritesCount > 0 ? 'solid' : 'regular'} fa-heart`}></i>
+              {favoritesCount > 0 && (
+                <span className={`absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full animate-pulse`}></span>
+              )}
+           </button>
+
+           {/* Botão de Perfil */}
+           <button 
+             onClick={onOpenProfile}
+             className={`w-10 h-10 rounded-full bg-gradient-to-tr from-${colorBase}-500 to-purple-500 p-[2px] cursor-pointer hover:scale-105 transition-transform`}
+           >
+              <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
+                 <i className="fa-solid fa-user text-xs text-white"></i>
+              </div>
+           </button>
+        </div>
+
       </div>
     </nav>
   );

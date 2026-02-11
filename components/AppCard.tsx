@@ -21,92 +21,52 @@ const AppCard: React.FC<AppCardProps> = ({ app, onClick, activeColor, isFavorite
   return (
     <div 
       onClick={onClick}
-      className="relative group cursor-pointer transition-all duration-500 hover:scale-[1.03] active:scale-95"
+      className="group relative flex flex-col glass-card rounded-3xl p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_40px_rgba(0,0,0,0.5)] cursor-pointer overflow-hidden"
     >
-      {/* 
-          BORDA GIGANTE EM COMPRIMENTO (FEIXE DE LUZ LATERAL) 
-          Essa borda percorre todo o card verticalmente, sendo muito mais visível.
-      */}
-      <div className={`absolute -left-[2px] top-4 bottom-4 w-[4px] bg-${colorName}-500 rounded-full blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-700 shadow-[0_0_15px_${colorName}-500]`}></div>
-      <div className={`absolute -right-[2px] top-4 bottom-4 w-[4px] bg-${colorName}-500 rounded-full blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-700 shadow-[0_0_15px_${colorName}-500]`}></div>
+      {/* Label de Categoria / Versão */}
+      <div className="absolute top-4 left-4 z-20 flex gap-2">
+         {app.isVerified && (
+           <span className={`bg-${colorName}-500 text-white text-[9px] font-bold px-2 py-1 rounded-md uppercase tracking-wide shadow-lg`}>
+             Elite
+           </span>
+         )}
+      </div>
 
-      {/* MOLDURA DISCRETA DE FUNDO */}
-      <div className={`absolute -inset-[1px] rounded-[2.5rem] bg-gradient-to-b from-white/10 to-transparent opacity-20 group-hover:opacity-100 transition-all duration-700`}></div>
-      
-      {/* SOMBRA NEON DE FUNDO */}
-      <div className={`absolute inset-0 rounded-[2.5rem] bg-${colorName}-500/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700`}></div>
+      {/* Botão de Favorito Flutuante */}
+      <button 
+        onClick={handleFavClick}
+        className={`absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center transition-all hover:bg-white text-white hover:text-red-500 ${isFavorite ? 'text-red-500' : ''}`}
+      >
+        <i className={`fa-${isFavorite ? 'solid' : 'regular'} fa-heart text-xs`}></i>
+      </button>
 
-      {/* CONTEÚDO DA CÁPSULA */}
-      <div className="relative h-full glass rounded-[2.4rem] p-5 flex items-center gap-5 bg-black border border-white/5 overflow-hidden shadow-2xl">
-        
-        {/* REFLEXO DE VIDRO INTERNO */}
-        <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none"></div>
+      {/* Ícone / Imagem do Produto */}
+      <div className="relative w-full aspect-square rounded-2xl overflow-hidden mb-4 bg-[#151515]">
+        <img 
+          src={app.icon} 
+          alt={app.title} 
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+        {/* Overlay Escuro ao passar o mouse */}
+        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      </div>
 
-        {/* ICON CONTAINER */}
-        <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0 z-10">
-          <div className={`absolute -inset-1 bg-gradient-to-tr from-${colorName}-500/20 to-transparent rounded-[1.8rem] blur-sm`}></div>
-          <img 
-            src={app.icon} 
-            alt={app.title} 
-            className="w-full h-full object-cover rounded-[1.7rem] border border-white/10 relative z-10 transition-transform duration-700 group-hover:scale-110"
-          />
-          {app.isVerified && (
-            <div className={`absolute -bottom-1 -right-1 w-7 h-7 bg-${colorName}-600 rounded-full border-4 border-black flex items-center justify-center z-20 shadow-xl`}>
-              <i className="fa-solid fa-check text-[10px] text-white"></i>
-            </div>
-          )}
-        </div>
+      {/* Informações do Produto */}
+      <div className="flex flex-col flex-1">
+        <h3 className="text-white font-bold text-lg leading-tight mb-1 truncate group-hover:text-white/90 transition-colors">
+          {app.title}
+        </h3>
+        <p className="text-gray-500 text-xs font-medium mb-4 truncate">
+          {app.category} • {app.size}
+        </p>
 
-        {/* ÁREA DE INFORMAÇÃO */}
-        <div className="flex-1 min-w-0 py-2 z-10">
-          <div className="flex flex-col h-full justify-center space-y-2">
-            <div>
-              <h3 className="font-black text-xl md:text-2xl text-white truncate italic tracking-tighter leading-tight group-hover:text-${colorName}-400 transition-colors uppercase">
-                {app.title}
-              </h3>
-              <p className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mt-1">
-                {app.packageName}
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <span className={`px-2.5 py-1 bg-${colorName}-500/10 border border-${colorName}-500/20 rounded-lg text-[8px] font-black text-${colorName}-400 uppercase tracking-widest`}>
-                {app.category}
-              </span>
-              <div className="h-1 w-1 rounded-full bg-white/20"></div>
-              <span className="text-[8px] text-gray-400 font-black uppercase tracking-widest">
-                VER {app.version}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* BOTÕES DE AÇÃO */}
-        <div className="flex flex-col items-center gap-3 z-10">
-           <button 
-             onClick={handleFavClick} 
-             className={`w-11 h-11 flex items-center justify-center glass rounded-2xl transition-all active:scale-90 hover:bg-white/5 border-white/5 ${isFavorite ? 'text-rose-500' : 'text-white/20'}`}
-           >
-              <i className={`fa-${isFavorite ? 'solid' : 'regular'} fa-heart text-base`}></i>
+        {/* Botão de Ação Limpo (Sem preços) */}
+        <div className="mt-auto flex items-center justify-end">
+           <button className={`w-10 h-10 rounded-full bg-white text-black flex items-center justify-center transition-transform active:scale-90 group-hover:bg-${colorName}-500 group-hover:text-white shadow-lg`}>
+              <i className="fa-solid fa-arrow-down text-sm"></i>
            </button>
-           
-           <div className={`flex items-center justify-center w-10 h-10 rounded-2xl bg-${colorName}-500/10 border border-${colorName}-500/30 group-hover:bg-${colorName}-500 group-hover:text-black transition-all duration-500`}>
-              <i className="fa-solid fa-arrow-right-long text-sm animate-bounce-x"></i>
-           </div>
-        </div>
-
-        {/* EFEITO DE VARREDURA DE LUZ */}
-        <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
-           <div className={`absolute -left-full top-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-25deg] group-hover:animate-[scan_1.5s_infinite]`}></div>
         </div>
       </div>
-      
-      <style>{`
-        @keyframes scan {
-          0% { left: -100%; }
-          100% { left: 200%; }
-        }
-      `}</style>
     </div>
   );
 };
