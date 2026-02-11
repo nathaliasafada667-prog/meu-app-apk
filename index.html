@@ -5,23 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#000000">
-    <title>EsmaelX | Cine Premium Edition</title>
+    <title>EsmaelX | Premium Store</title>
     
     <!-- Meta Tags SEO -->
-    <meta name="description" content="A experiência definitiva em streaming AMOLED. Filmes e séries com a mais alta fidelidade visual.">
-    <meta name="keywords" content="Filmes, Séries, Streaming, AMOLED, EsmaelX, 4K">
+    <meta name="description" content="A loja definitiva de APKs Premium.">
+    <meta name="keywords" content="Store, APK, Mods, Premium, EsmaelX">
     <meta name="author" content="Esmael">
     
-    <!-- Open Graph / Social -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="EsmaelX | Cine Premium Edition">
-    <meta property="og:description" content="Streaming de elite com interface AMOLED Black e Glassmorphism.">
-    <meta property="og:image" content="https://picsum.photos/seed/esmael/1200/630">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Fontes Personalizadas -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Bebas+Neue&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -33,98 +26,46 @@
             font-family: var(--app-font);
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
-            transition: font-family 0.3s ease;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.01);
-            backdrop-filter: blur(var(--glass-blur, 30px));
-            -webkit-backdrop-filter: blur(var(--glass-blur, 30px));
-            border: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        /* ANIMAÇÕES DO TITÃ GUARDIÃO */
-        @keyframes titan-breath {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-15px) scale(1.02); }
-        }
-
-        @keyframes hand-grip {
-            0%, 100% { transform: translateX(0) rotate(0deg); }
-            50% { transform: translateX(5px) rotate(1deg); }
-        }
-
-        @keyframes steam {
-            0% { transform: translateY(0) scale(1); opacity: 0; }
-            50% { opacity: 0.2; }
-            100% { transform: translateY(-200px) scale(3); opacity: 0; }
-        }
-
-        @keyframes bounceX {
-            0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(5px); }
-        }
-
-        /* NOVA ANIMAÇÃO DE TÍTULO DINÂMICO */
-        @keyframes titleSlide {
-            0% { transform: translateY(20px); opacity: 0; filter: blur(5px); }
-            100% { transform: translateY(0); opacity: 1; filter: blur(0); }
-        }
-
-        .animate-titan { animation: titan-breath 6s ease-in-out infinite; }
-        .animate-hand-left { animation: hand-grip 4s ease-in-out infinite; }
-        .animate-hand-right { animation: hand-grip 4s ease-in-out infinite reverse; }
-        .animate-steam { animation: steam 5s linear infinite; }
-        .animate-bounce-x { animation: bounceX 1.5s ease-in-out infinite; }
-        .animate-title-slide { animation: titleSlide 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
-
-        .glass-hover:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transform: translateY(-5px);
-            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
         }
         
-        @keyframes aurora {
-            0% { transform: translate(0, 0) scale(1); opacity: 0.3; }
-            50% { transform: translate(5%, 5%) scale(1.1); opacity: 0.5; }
-            100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
-        }
-        .aurora-blob {
-            animation: aurora 20s infinite alternate ease-in-out;
-            will-change: transform, opacity;
+        /* Efeito de Vidro Premium (Apple Style) */
+        .glass {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
+        .glass-card {
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Animações Suaves de Interface */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-scale-in { animation: scaleIn 0.4s ease-out forwards; }
+
+        /* Scrollbar Invisível mas funcional */
         ::-webkit-scrollbar {
-            width: 3px;
+            width: 0px;
+            background: transparent;
         }
-        ::-webkit-scrollbar-track {
-            background: #000;
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #111;
-            border-radius: 10px;
-        }
-
-        @keyframes softZoom {
-            from { opacity: 0; transform: scale(0.98) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .animate-soft-zoom { animation: softZoom 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
-
-        .scanline {
-            width: 100%;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.03);
-            position: fixed;
-            z-index: 999;
-            pointer-events: none;
-            animation: scanlineMove 8s linear infinite;
-        }
-
-        @keyframes scanlineMove {
-            0% { top: -5%; }
-            100% { top: 105%; }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 <script type="importmap">
@@ -144,7 +85,6 @@
 <link rel="stylesheet" href="/index.css">
 </head>
 <body class="theme-root">
-    <div class="scanline"></div>
     <div id="root"></div>
     <script type="module" src="index.tsx"></script>
 <script type="module" src="/index.tsx"></script>

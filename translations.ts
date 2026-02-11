@@ -83,6 +83,11 @@ const ptFull: TranslationSchema = {
     modFeaturesLabel: "Recursos do Mod",
     aboutAppLabel: "Sobre o App",
     premiumRequired: "Usuários comuns possuem download restrito. Clique para ver preços.",
+    authInvalidCredentials: "Conta ou Código não encontrado no banco de dados.",
+    authExpired: "Seu protocolo Elite expirou. Renove sua assinatura.",
+    winterMode: "Modo Inverno ❄️",
+    shareBtn: "Compartilhar",
+    linkCopied: "Link Copiado!"
 };
 
 const enFull: TranslationSchema = {
@@ -163,15 +168,20 @@ const enFull: TranslationSchema = {
     modFeaturesLabel: "Mod Features",
     aboutAppLabel: "About the App",
     premiumRequired: "Common users have restricted downloads. Click for pricing.",
+    authInvalidCredentials: "Account or Code not found in database.",
+    authExpired: "Your Elite protocol has expired. Renew your subscription.",
+    winterMode: "Winter Mode ❄️",
+    shareBtn: "Share",
+    linkCopied: "Link Copied!"
 };
 
 export const translations: Record<Language, TranslationSchema> = {
   pt: ptFull,
   en: enFull,
-  es: { ...ptFull, downloaderTab: "Downloader", categoryAll: "Inicio" },
-  ru: { ...ptFull, downloaderTab: "Загрузчик", categoryAll: "Главная" },
-  fr: { ...ptFull, downloaderTab: "Téléchargeur", categoryAll: "Accueil" },
-  it: { ...ptFull, downloaderTab: "Scaricatore", categoryAll: "Inizio" },
-  ko: { ...ptFull, downloaderTab: "다운로더", categoryAll: "홈" },
-  ja: { ...ptFull, downloaderTab: "ダウンロード", categoryAll: "ホーム" }
+  es: { ...ptFull, downloaderTab: "Downloader", categoryAll: "Inicio", winterMode: "Modo Invierno ❄️", shareBtn: "Compartir", linkCopied: "¡Enlace Copiado!" },
+  ru: { ...ptFull, downloaderTab: "Загрузчик", categoryAll: "Главная", winterMode: "Зимний режим ❄️", shareBtn: "Поделиться", linkCopied: "Ссылка скопирована!" },
+  fr: { ...ptFull, downloaderTab: "Téléchargeur", categoryAll: "Accueil", winterMode: "Mode Hiver ❄️", shareBtn: "Partager", linkCopied: "Lien Copié !" },
+  it: { ...ptFull, downloaderTab: "Scaricatore", categoryAll: "Inizio", winterMode: "Modalità Inverno ❄️", shareBtn: "Condividi", linkCopied: "Link Copiato!" },
+  ko: { ...ptFull, downloaderTab: "다운로더", categoryAll: "홈", winterMode: "겨울 모드 ❄️", shareBtn: "공유", linkCopied: "링크 복사됨!" },
+  ja: { ...ptFull, downloaderTab: "ダウンロード", categoryAll: "ホーム", winterMode: "冬モード ❄️", shareBtn: "共有", linkCopied: "リンクをコピーしました！" }
 };

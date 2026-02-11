@@ -143,4 +143,9 @@ export interface TranslationSchema {
   modFeaturesLabel: string;
   aboutAppLabel: string;
   premiumRequired: string;
+  authInvalidCredentials: string;
+  authExpired: string;
+  winterMode: string;
+  shareBtn: string;
+  linkCopied: string;
 }
